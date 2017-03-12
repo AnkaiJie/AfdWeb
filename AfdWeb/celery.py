@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 import os
 from celery import Celery
+import django
 from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'AfdWeb.settings')
+django.setup()
 app = Celery('afd')
 
 # Using a string here means the worker will not have to
