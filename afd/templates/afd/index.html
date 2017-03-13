@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>Sample Application</title>
+  </head>
+  <body bgcolor=white>
+
+    <table border="0" cellpadding="10">
+      <tr>
+        <td>
+          <h1>Enter id of author to investigate.</h1>
+        </td>
+      </tr>
+    </table>
+
+
+	<form action="/author-request/" method="post">
+	    <label for="author_id">Target Author Id: </label>
+	    <input id="author_id" type="text" name="author_id" value="{{ author_id }}">
+	    <input type="submit" value="OK">
+	</form>
+
+  </body>
+</html>
+
+
