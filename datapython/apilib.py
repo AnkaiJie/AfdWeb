@@ -1,10 +1,10 @@
-from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import requests
 import json
 import time
 import pymysql
 import time
-from sql import *
+from datapython.sql import *
 
 class reqWrapper:
     def __init__(self, headers):
@@ -375,8 +375,11 @@ class ApiToDB:
         self.sApi = ScopusApiLib()
         self.utility = Utility()
 
+    def storeAuthorTest(author_id):
+        print(author_id)
+
     # this should be the only method that the client interacts with
-    def storeAuthorMain(self, auth_id, new=False start_index=0, pap_num=100, cite_num=100, refCount=-1):
+    def storeAuthorMain(self, auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1):
         author_profile = self.sApi.getAuthorMetrics(auth_id)
         author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
         self.dbi = DbInterface(author_identifier)

@@ -4,7 +4,7 @@ from celery import Celery, shared_task
 from celery.utils.log import get_task_logger
 import smtplib
 from email.mime.text import MIMEText
-from datapython.apilib import storeAuthorMain 
+from datapython.apilib import ApiToDB
 
 
 import time
@@ -14,7 +14,7 @@ capp.config_from_object(CeleryConfig)
 logger = get_task_logger(APP_NAME)
 
 @capp.task
-def send_email():
+def send_email(author_id):
     fromaddr = "kingshruf8@gmail.com"
     toaddr = "ankaijie@gmail.com"
     msg = MIMEText("YOUR MESSAGE HERE " + author_id)
@@ -35,5 +35,8 @@ def send_email():
 
 @capp.task
 def run_overcite_script(author_id):
-    storeAuthorMain(author_id, new=True)
+    afd = ApiToDB()
+    returned = afd.storeAuthorTest(author_id)
+    send_email(returned)
+
 
