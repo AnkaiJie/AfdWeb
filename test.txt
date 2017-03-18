@@ -1,0 +1,236 @@
+Running script on author: 22954842600
+Getting author papers
+Beginning processing for paper: 2-s2.0-79956094375
+['2-s2.0-84897783998']
+['2-s2.0-84897783998']
+Handling citing papers...
+Citing paper index number: 1
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / Body area networks: A survey
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-33947399652 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-33947399652 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-33947399652 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-33947399652 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-77950606677 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-77950606677 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-77950606677 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cook G. / 2-s2.0-77950606677 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Okada T. / 2-s2.0-79953836838 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Huxel K.C. / 2-s2.0-79953836838 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Nesser T.W. / 2-s2.0-79953836838 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Okada T. / 2-s2.0-79953836838 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Huxel K.C. / 2-s2.0-79953836838 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Nesser T.W. / 2-s2.0-79953836838 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Okada T. / 2-s2.0-79953836838 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Huxel K.C. / 2-s2.0-79953836838 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Nesser T.W. / 2-s2.0-79953836838 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Okada T. / 2-s2.0-79953836838 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Huxel K.C. / 2-s2.0-79953836838 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Nesser T.W. / 2-s2.0-79953836838 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Parchmann C.J. / 2-s2.0-84856170494 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McBride J.M. / 2-s2.0-84856170494 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Parchmann C.J. / 2-s2.0-84856170494 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McBride J.M. / 2-s2.0-84856170494 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Parchmann C.J. / 2-s2.0-84856170494 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McBride J.M. / 2-s2.0-84856170494 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Parchmann C.J. / 2-s2.0-84856170494 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McBride J.M. / 2-s2.0-84856170494 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Peate W.F. / 2-s2.0-34248366611 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Francis S. / 2-s2.0-34248366611 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bellamy K. / 2-s2.0-34248366611 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bates G. / 2-s2.0-34248366611 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Lunda K. / 2-s2.0-34248366611 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Peate W.F. / 2-s2.0-34248366611 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Francis S. / 2-s2.0-34248366611 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bellamy K. / 2-s2.0-34248366611 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bates G. / 2-s2.0-34248366611 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Lunda K. / 2-s2.0-34248366611 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Peate W.F. / 2-s2.0-34248366611 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Francis S. / 2-s2.0-34248366611 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bellamy K. / 2-s2.0-34248366611 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bates G. / 2-s2.0-34248366611 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Lunda K. / 2-s2.0-34248366611 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Peate W.F. / 2-s2.0-34248366611 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Francis S. / 2-s2.0-34248366611 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bellamy K. / 2-s2.0-34248366611 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Bates G. / 2-s2.0-34248366611 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Lunda K. / 2-s2.0-34248366611 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R. / 2-s2.0-79952578109 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-79952578109 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R. / 2-s2.0-79952578109 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-79952578109 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R. / 2-s2.0-79952578109 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-79952578109 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R. / 2-s2.0-79952578109 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K. / 2-s2.0-79952578109 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-79952578109 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Minick K.I. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R.J. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Burton L. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Taylor A. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Minick K.I. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R.J. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Burton L. / 2-s2.0-77950607387 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Taylor A. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Minick K.I. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R.J. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Burton L. / 2-s2.0-77950607387 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Taylor A. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Minick K.I. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Butler R.J. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kiesel K.B. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Plisky P. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Burton L. / 2-s2.0-77950607387 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Taylor A. / 2-s2.0-77950607387 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Onate J.A. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dewey T. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kollock R.O. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Thomas K.S. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Van Lunen B.L. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Demaio M. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Ringleb S.I. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Onate J.A. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dewey T. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kollock R.O. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Thomas K.S. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Van Lunen B.L. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Demaio M. / 2-s2.0-84859805558 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Ringleb S.I. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Onate J.A. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dewey T. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kollock R.O. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Thomas K.S. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Van Lunen B.L. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Demaio M. / 2-s2.0-84859805558 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Ringleb S.I. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Onate J.A. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dewey T. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kollock R.O. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Thomas K.S. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Van Lunen B.L. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Demaio M. / 2-s2.0-84859805558 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Ringleb S.I. / 2-s2.0-84859805558 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Gonzalez S. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Cao H. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Leung V.C.M. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Chen M. / 2-s2.0-79956094375 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Vasilakos A. / 2-s2.0-79956094375 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84870340333 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84870340333 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84870340333 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84870340333 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Barth J. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Klucken J. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kammerer T. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Steidl R. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Winkler J. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Hornegger J. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Barth J. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Klucken J. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kammerer T. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Steidl R. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Winkler J. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Hornegger J. / 2-s2.0-84861926899 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Barth J. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Klucken J. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kammerer T. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Steidl R. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Winkler J. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Hornegger J. / 2-s2.0-84861926899 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Barth J. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Klucken J. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kammerer T. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Steidl R. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Winkler J. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Hornegger J. / 2-s2.0-84861926899 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84861926899 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84862275864 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84862275864 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Melzer D. / 2-s2.0-84862275864 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kuehner P. / 2-s2.0-84862275864 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84862275864 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84862275864 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Melzer D. / 2-s2.0-84862275864 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kuehner P. / 2-s2.0-84862275864 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84862275864 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84862275864 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Melzer D. / 2-s2.0-84862275864 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kuehner P. / 2-s2.0-84862275864 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Eskofier B. / 2-s2.0-84862275864 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kugler P. / 2-s2.0-84862275864 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Melzer D. / 2-s2.0-84862275864 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Kuehner P. / 2-s2.0-84862275864 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McGrath M. / 2-s2.0-77954874677 / None
+Source: Jensen U. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dishongh T. / 2-s2.0-77954874677 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McGrath M. / 2-s2.0-77954874677 / None
+Source: Weilbrenner F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dishongh T. / 2-s2.0-77954874677 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McGrath M. / 2-s2.0-77954874677 / None
+Source: Rott F. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dishongh T. / 2-s2.0-77954874677 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: McGrath M. / 2-s2.0-77954874677 / None
+Source: Eskofier B. / 2-s2.0-84897783998 / Sensor-based mobile functional movement screening ------------- Target: Dishongh T. / 2-s2.0-77954874677 / None
+Done citing papers.

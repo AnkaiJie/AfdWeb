@@ -1,6 +1,7 @@
 def create_s1(author_id):
     tab_name = author_id + "_citations_s1"
-    s = """create table if not exists """ + tab_name + """ (
+    s = """
+        create table if not exists """ + tab_name + """ (
         src_author_dc_identifier varchar(50),
         src_author_given_name varchar(200),
         src_author_indexed_name varchar(200),
@@ -20,16 +21,25 @@ def create_s1(author_id):
         targ_paper_publicationName varchar(1000),
         targ_paper_title varchar(1000)
     );
-    ALTER TABLE """+ tab_name + """  
-    ADD PRIMARY KEY (`src_author_dc_identifier`, `src_paper_eid`, `targ_author_dc_identifier`,`targ_paper_eid`); 
     """
     return s
+
+def check_s1(author_id):
+    tab_name = author_id + "_citations_s1"
+    return """select exists (select * from information_schema.tables where 
+    table_name=\"""" + tab_name + """\" and table_schema=\"CiteFraud\") """
+
+def create_s1_key(author_id):
+    tab_name = author_id + "_citations_s1"
+    return """ALTER TABLE """ + tab_name + """  
+    ADD PRIMARY KEY (`src_author_dc_identifier`, `src_paper_eid`, `targ_author_dc_identifier`,`targ_paper_eid`); 
+    """
 
 def create_s2(author_id):
     tab_name = author_id + "_citations_s2"
     tab1_name = author_id + "_citations_s1"
-    s = """create table if not exists """ + tab_name + """ (
-        create table citations_s2 as select
+    s = """drop table if exists """ + tab_name + """;
+        create table """ + tab_name + """ as select
         substring(src_author_dc_identifier, 11) as src_author_id,
         src_author_given_name,
         src_author_indexed_name,
@@ -51,7 +61,7 @@ def create_s2(author_id):
     from """ + tab1_name + """ 
     where src_author_dc_identifier != "" and
     targ_author_dc_identifier != "";
-    ALTER TABLE """ + tab_name + """  
+    ALTER TABLE """+ tab_name + """   
     ADD PRIMARY KEY (`src_author_id`, `src_paper_eid`, `targ_author_id`,`targ_paper_eid`);"""
 
     return s

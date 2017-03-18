@@ -1,10 +1,10 @@
-from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import requests
 import json
 import time
 import pymysql
 import time
-from datapython.sql import *
+from sql import *
 
 class reqWrapper:
     def __init__(self, headers):
@@ -156,7 +156,6 @@ class ScopusApiLib:
         while(True):
             time.sleep(0.2)
             resp = self.reqs.getJson(req_url)
-            print(resp)
             resp_body = {}
             try:
                 resp_body = resp['abstracts-retrieval-response']
@@ -282,7 +281,7 @@ class DbInterface:
         self.author_id = author_id
 
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
-        createTables()
+        self.createTables()
         
 
     def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor):
@@ -340,11 +339,21 @@ class DbInterface:
 
     def createTables(self):
         s1_command = create_s1(self.author_id)
+        check_s1_cmd = check_s1(self.author_id)
+        prim_key = create_s1_key(self.author_id)
         cur = self.conn.cursor()
         try:
-            cur.execute(s1_command)
+            cur.execute(check_s1_cmd)
+            row = cur.fetchone()
+            if row[0] == 0:
+                cur.execute(s1_command)
+                print('create s1')
+                cur.execute(prim_key)
+                print('prim key s1')
         except:
             print(s1_command)
+            print(check_s1_cmd)
+            print(prim_key)
             raise
         self.conn.commit()
         cur.close()
@@ -375,7 +384,7 @@ class ApiToDB:
         self.sApi = ScopusApiLib()
         self.utility = Utility()
 
-    def storeAuthorTest(author_id):
+    def storeAuthorTest(self, author_id):
         print(author_id)
 
     # this should be the only method that the client interacts with

@@ -36,7 +36,7 @@ def send_email(author_id):
 @capp.task
 def run_overcite_script(author_id):
     afd = ApiToDB()
-    returned = afd.storeAuthorTest(author_id)
-    send_email(returned)
+    returned = afd.storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1)
+    # send_email(author_id)
 
 
