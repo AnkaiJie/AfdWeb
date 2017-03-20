@@ -44,15 +44,15 @@ def send_email(author_id, zipath):
     server.quit()
 
 def analyze(author_id, name, email):
-    # tool = Analysis(author_id)
-    # barpath = tool.plotOvercitesBar(author_id)
-    # histpath = tool.plotOvercitesHist(author_id)
-    # csvpath = tool.overcitesCsv(author_id)
+    tool = Analysis(author_id)
+    barpath = tool.plotOvercitesBar(author_id)
+    histpath = tool.plotOvercitesHist(author_id)
+    csvpath = tool.overcitesCsv(author_id)
     zipath = 'datapython/graphs/' + author_id + '_overcitedata.zip'
-    # with ZipFile(zipath, 'w') as myzip:
-    #     myzip.write(barpath)
-    #     myzip.write(histpath)
-    #     myzip.write(csvpath)
+    with ZipFile(zipath, 'w') as myzip:
+        myzip.write(barpath)
+        myzip.write(histpath)
+        myzip.write(csvpath)
 
     send_email(author_id, zipath)
 
@@ -61,7 +61,7 @@ def analyze(author_id, name, email):
 @capp.task
 def run_overcite_script(author_id, name, email):
     afd = ApiToDB()
-    # returned = afd.storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1)
+    returned = afd.storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1)
     analyze(author_id, name, email)
 
 
