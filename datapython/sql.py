@@ -70,7 +70,8 @@ def create_overcites(author_id):
     tab_name = author_id + "_overcites"
     tab2_name = author_id + "_citations_s2"
 
-    s=  """create table """ + tab_name + """ as
+    s=  """drop table if exists """ + tab_name + """; 
+        create table """ + tab_name + """ as
         select inter.targ_author_id, inter.src_paper_eid, inter.author_num, count(inter.targ_paper_eid) as overcites from 
         (select targ_author_id, targ_paper_eid, src_paper_eid, 
             count(src_author_id) as author_num from """ + tab2_name + """ 

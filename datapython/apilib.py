@@ -1,10 +1,10 @@
-from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import requests
 import json
 import time
 import pymysql
 import time
-from sql import *
+from datapython.sql import *
 
 class reqWrapper:
     def __init__(self, headers):
@@ -37,6 +37,7 @@ class ScopusApiLib:
     def getAuthorMetrics(self, auth_id):
         url = "http://api.elsevier.com/content/author?author_id=" + str(auth_id)
         resp = self.reqs.getJson(url)
+        print(resp)
         resp = resp['author-retrieval-response'][0]
 
         pfields = ['preferred-name', 'publication-range']
@@ -305,11 +306,14 @@ class DbInterface:
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
+        s2_command = create_s2(self.author_id)
         overcite_command = create_overcites(self.author_id)
         cur = self.conn.cursor()
         try:
+            cur.execute(s2_command)
             cur.execute(overcite_command)
         except:
+            print(s2_command)
             print(overcite_command)
             raise
         self.conn.commit()
@@ -434,6 +438,10 @@ class ApiToDB:
             #     self.storeToStage1(eid, refid)
             #     self.storePaperReferences(refid, refCount=refCount)
             # print('Done references')
+
+        print('Beginning processing of s2 and overcite table.')
+        self.dbi.processOvercites()
+        print('Done.')
 
     def storePaperReferences(self, eid, srcPaperDict, refCount=-1):
         references = self.sApi.getPaperReferences(eid, refCount=refCount)
