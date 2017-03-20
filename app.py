@@ -12,9 +12,9 @@ def index():
 
 @app.route('/request/overcitesAuthor', methods=['POST'])
 def send_overcites():
-    form = request.json
+    form = request.form
     # print(form['author_id'])
-    result = run_overcite_script.delay(form['author_id'])
+    result = run_overcite_script.delay(form['author_id'], form['name'], form['email'])
     return "hello" 
 
 

@@ -37,7 +37,7 @@ class ScopusApiLib:
     def getAuthorMetrics(self, auth_id):
         url = "http://api.elsevier.com/content/author?author_id=" + str(auth_id)
         resp = self.reqs.getJson(url)
-        print(resp)
+        # print(resp)
         resp = resp['author-retrieval-response'][0]
 
         pfields = ['preferred-name', 'publication-range']

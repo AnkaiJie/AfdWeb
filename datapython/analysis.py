@@ -1,21 +1,24 @@
-from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import operator
 import pymysql
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from apilib import ScopusApiLib
+from datapython.apilib import ScopusApiLib
+import csv
 
 plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self):
+    def __init__(self, authid):
         self.api = ScopusApiLib()
+        self.authname = self.getAuthorName(authid)
 
-    def getAuthorName(id):
-        return
+    def getAuthorName(self, id):
+        details = self.api.getAuthorMetrics(id)
+        return details['given-name'] + " " + details['surname']
 
     def getOvercites(self, authid):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
@@ -29,11 +32,11 @@ class Analysis:
         return df
 
 
-    def plotOvercitesBar(self, authid, authname, save=False):
+    def plotOvercitesBar(self, authid, save=True):
         df = self.getOvercites(authid)
         fig, ax = plt.subplots(figsize=(10,10))
         fig.subplots_adjust(bottom=0.25)
-
+        authname = self.authname 
         papers = df['Citing Paper'][:25]
         x_pos = np.arange(len(papers))
         overs = df['Overcites'][:25]
@@ -45,15 +48,16 @@ class Analysis:
         ax.set_ylabel('Overcites')
         ax.set_xlabel('Citing Paper ID')
         ax.set_title('Top 25 overciting papers for author ' + authname + ' from ' + str(len(df)) + ' citing papers')
+        savename = 'datapython/graphs/OverBar_' + '_'.join(authname.split()) + '.png'
         if save:
-            fig.savefig('graphs/OverBar_' + '_'.join(authname.split()) + '.png')
+            fig.savefig(savename)
         else:
             plt.show()
 
-        print('Done ' + authname)
+        return savename
 
-    def plotOvercitesHist(self, authid, authname, save=False, threshold =10, savename=""):
-
+    def plotOvercitesHist(self, authid, save=True, threshold =10):
+        authname = self.authname 
         df = self.getOvercites(authid)
         fig,ax = plt.subplots(figsize=(10,10))
         fig.subplots_adjust(bottom=0.25)
@@ -79,14 +83,28 @@ class Analysis:
         ax.set_ylabel('Number of Papers with Overcite Amount')
         ax.set_xlabel('Number of Overcites')
         ax.set_title('Overcite frequency for papers with >=' + str(threshold) + ' overcites \n from ' + str(len(df)) + ' citing papers for ' + authname)
-        if save and savename="":
-            fig.savefig('graphs/OverHist_' + '_'.join(authname.split()) + '.png')
+        savename = 'datapython/graphs/OverHist_' + '_'.join(authname.split()) + '.png'
+        if save:
+            fig.savefig(savename)
         elif save:
             fig.savefig(savename + ".png")
         else:
             plt.show()
 
-        print('Done ' + authname)
+        return savename
+
+    def overcitesCsv(self, authid):
+        authname = self.authname
+        df = self.getOvercites(authid)
+        name = 'datapython/graphs/OverCites_' + '_'.join(authname.split()) + '.csv'
+        writer = csv.writer(open(name, 'w'), lineterminator='\n')
+        writer.writerow(['Target Author', 'Citing Paper', 'Number of Authors', 'Overcite Count'])
+        for idx, row in df.iterrows():
+            targ, cite, authors, overcites = row['Target Author'], row['Citing Paper'], row['Author Count'],row['Overcites']
+            writer.writerow([targ, cite, authors, overcites])
+
+        return name
+
 
 
 # plotOvercitesBar('22954842600')
@@ -96,6 +114,7 @@ class Analysis:
 # print (s.getAuthorMetrics('22954842600'))
 
 # a = Analysis()
+# print(a.overcitesCsv('22954842600'))
 # a.plotOvercitesBar('22954842600', 'Athanasios Vasilakos', True)
 # a.plotOvercitesBar('7004058432', 'Tarek Abdelzaher', True)
 # a.plotOvercitesBar('7006637893', 'David Haussler', True)
