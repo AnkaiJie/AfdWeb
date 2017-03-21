@@ -1,10 +1,11 @@
-from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import requests
 import json
 import time
+import concurrent.futures
 import pymysql
 import time
-from datapython.sql import *
+from sql import *
 
 class reqWrapper:
     def __init__(self, headers):
@@ -383,124 +384,145 @@ class DbInterface:
 # all the API return value parsing should be placed here
 # any text/key processing is done here
 # there is no sql code in this class, that should all be handled in DbInterface()
-class ApiToDB:
-    def __init__(self):
-        self.sApi = ScopusApiLib()
-        self.utility = Utility()
 
-    def storeAuthorTest(self, author_id):
-        print(author_id)
+dbi = None
+sApi = ScopusApiLib()
 
-    # this should be the only method that the client interacts with
-    def storeAuthorMain(self, auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1):
-        author_profile = self.sApi.getAuthorMetrics(auth_id)
-        author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
-        self.dbi = DbInterface(author_identifier)
-        # Puts the main author record
-        print('Running script on author: ' + str(auth_id))
-        
-        # Puts the authors papers
-        print('Getting author papers')
-        papers = self.sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
-        for eid in papers:
-            print('Beginning processing for paper: ' + eid)
-            #main_title = self.storePapersOnly(eid)
-            # references = self.sApi.getPaperReferences(eid, refCount=refCount)
-            # if references is None:
-            #     print('No Data on References')
-            #     references = []
-            citedbys = self.sApi.getCitingPapers(eid, num=cite_num, sort_order="citations")
-            thisPaperDict = self.sApi.getPaperInfo(eid) #do this here to avoid duplicate api calls
-            if thisPaperDict is None:
-                print("NONE MAIN PAPER")
+def storeAuthorTest(author_id):
+    print(author_id)
+
+# this should be the only method that the client interacts with
+def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1):
+    author_profile = sApi.getAuthorMetrics(auth_id)
+    author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
+    dbi = DbInterface(author_identifier)
+    # Puts the main author record
+    print('Running script on author: ' + str(auth_id))
+    
+    # Puts the authors papers
+    print('Getting author papers')
+    papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
+
+    print(grouper(1, papers))
+    executor = concurrent.futures.ProcessPoolExecutor(5)    
+    processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, refCount)
+        for paper_arr in grouper(1, papers)]
+    for p in processes:
+        p.result()
+
+    print('Beginning processing of s2 and overcite table.')
+    dbi.processOvercites()
+    print('Done.')
+
+def grouper(lengths, arr):
+    arrarr = []
+    begin = 0
+    arrlen = len(arr)
+    while begin < arrlen:
+        sub = arr[begin:begin+lengths]
+        begin += lengths
+        arrarr.append(sub)
+    return arrarr
+
+def processPaperMain(author_id, papers, cite_num,refCount):
+    for eid in papers:
+        print('Beginning processing for paper: ' + eid)
+        #main_title = self.storePapersOnly(eid)
+        # references = sApi.getPaperReferences(eid, refCount=refCount)
+        # if references is None:
+        #     print('No Data on References')
+        #     references = []
+        citedbys = sApi.getCitingPapers(eid, num=cite_num, sort_order="citations")
+        thisPaperDict = sApi.getPaperInfo(eid) #do this here to avoid duplicate api calls
+        if thisPaperDict is None:
+            print("NONE MAIN PAPER")
+            continue
+
+
+        #Puts the citing papers of the authors papers, and those respective authors
+        print('Handling citing papers...')
+
+        ccount = 1
+        for citing in citedbys:
+            print('Citing paper index number: ' + str(ccount))
+            citePaperDict = sApi.getPaperInfo(citing)
+            if citePaperDict is None:
+                print("NONE CITING PAPER")
                 continue
+            storeCiting(dict(citePaperDict), dict(thisPaperDict), author_id)
+            storePaperReferences(citing, dict(citePaperDict), author_id, refCount=refCount)
+            ccount += 1
+        print('Done citing papers.')
+        # # Puts the cited papers of the authors papers, and those respective authors
+        # print('Handling references...')
+        # #Repeated code from storePaperReferences for clarity
+        # for ref in references:
 
-            #Puts the citing papers of the authors papers, and those respective authors
-            print('Handling citing papers...')
+        #     refid = ref['eid']
+        #     self.storeToStage1(eid, refid)
+        #     self.storePaperReferences(refid, refCount=refCount)
+        # print('Done references')
 
-            ccount = 1
-            for citing in citedbys:
-                print('Citing paper index number: ' + str(ccount))
-                citePaperDict = self.sApi.getPaperInfo(citing)
-                if citePaperDict is None:
-                    print("NONE CITING PAPER")
-                    continue
-                self.storeCiting(dict(citePaperDict), dict(thisPaperDict))
-                self.storePaperReferences(citing, dict(citePaperDict), refCount=refCount)
-                ccount += 1
-            print('Done citing papers.')
+def storePaperReferences(eid, srcPaperDict, author_id, refCount=-1, ):
+    dbi = DbInterface(author_id)
+    references = sApi.getPaperReferences(eid, refCount=refCount)
+    if references is None:
+        return
+    srcAuthors = [{'indexed_name': None}]
+    if 'authors' in srcPaperDict and srcPaperDict['authors'] is not None:
+        srcAuthors = srcPaperDict.pop('authors')
 
-            # # Puts the cited papers of the authors papers, and those respective authors
-            # print('Handling references...')
-            # #Repeated code from storePaperReferences for clarity
-            # for ref in references:
-            #     refid = ref['eid']
-            #     self.storeToStage1(eid, refid)
-            #     self.storePaperReferences(refid, refCount=refCount)
-            # print('Done references')
-
-        print('Beginning processing of s2 and overcite table.')
-        self.dbi.processOvercites()
-        print('Done.')
-
-    def storePaperReferences(self, eid, srcPaperDict, refCount=-1):
-        references = self.sApi.getPaperReferences(eid, refCount=refCount)
-        if references is None:
-            return
-        srcAuthors = [{'indexed_name': None}]
-        if 'authors' in srcPaperDict and srcPaperDict['authors'] is not None:
-            srcAuthors = srcPaperDict.pop('authors')
-
-        for targPaperDict in references:
-            targAuthors = [{'indexed_name': None}]
-            if 'authors' in targPaperDict and targPaperDict['authors'] is not None:
-                targAuthors = targPaperDict.pop('authors')
-
-            for srcAuth in srcAuthors:
-                for targAuth in targAuthors:
-                    self.dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
-
-    def storeCiting(self, srcPaperDict, targPaperDict):
-        srcAuthors = [{'indexed_name': None}]
+    for targPaperDict in references:
         targAuthors = [{'indexed_name': None}]
-        if 'authors' in srcPaperDict:
-            srcAuthors = srcPaperDict.pop('authors')
-        if 'authors' in targPaperDict:
+        if 'authors' in targPaperDict and targPaperDict['authors'] is not None:
             targAuthors = targPaperDict.pop('authors')
 
         for srcAuth in srcAuthors:
             for targAuth in targAuthors:
-                self.dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+
+def storeCiting(srcPaperDict, targPaperDict, author_id):
+    dbi = DbInterface(author_id)
+    srcAuthors = [{'indexed_name': None}]
+    targAuthors = [{'indexed_name': None}]
+    if 'authors' in srcPaperDict:
+        srcAuthors = srcPaperDict.pop('authors')
+    if 'authors' in targPaperDict:
+        targAuthors = targPaperDict.pop('authors')
+
+    for srcAuth in srcAuthors:
+        for targAuth in targAuthors:
+            dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
 
 
-    # def storeToStage1(self, srcpapid, targpapid):
-    #     srcPaperDict = self.sApi.getPaperInfo(srcpapid)
-    #     targPaperDict = self.sApi.getPaperInfo(targpapid)
-    #     srcAuthors = [{'indexed_name': None}]
-    #     targAuthors = [{'indexed_name': None}]
-    #     if 'authors' in srcPaperDict:
-    #         srcAuthors = srcPaperDict.pop('authors')
-    #     if 'authors' in targPaperDict:
-    #         targAuthors = targPaperDict.pop('authors')
+# def storeToStage1(self, srcpapid, targpapid):
+#     srcPaperDict = sApi.getPaperInfo(srcpapid)
+#     targPaperDict = sApi.getPaperInfo(targpapid)
+#     srcAuthors = [{'indexed_name': None}]
+#     targAuthors = [{'indexed_name': None}]
+#     if 'authors' in srcPaperDict:
+#         srcAuthors = srcPaperDict.pop('authors')
+#     if 'authors' in targPaperDict:
+#         targAuthors = targPaperDict.pop('authors')
 
-    #     for srcAuth in srcAuthors:
-    #         for targAuth in targAuthors:
-    #             self.dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+#     for srcAuth in srcAuthors:
+#         for targAuth in targAuthors:
+#             dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
 
-    def getAuthorsFromPaper(self, origPaperDict):
-        paperDict = dict(origPaperDict)
+def getAuthorsFromPaper(origPaperDict):
+    paperDict = dict(origPaperDict)
 
-        author_arr = []
-        if 'authors' in paperDict:
-            for authid in paperDict['authors']:
-                if isinstance(authid, dict):
-                    author_arr.append(authid)
-                else:
-                    author_info = self.getAuthorInfo(authid)
-                    author_arr.append(author_info)
-            origPaperDict.pop('authors')
-        return author_arr
+    author_arr = []
+    if 'authors' in paperDict:
+        for authid in paperDict['authors']:
+            if isinstance(authid, dict):
+                author_arr.append(authid)
+            else:
+                author_info = getAuthorInfo(authid)
+                author_arr.append(author_info)
+        origPaperDict.pop('authors')
+    return author_arr
 
-    def getAuthorInfo(self, auth_id):
-        author = self.sApi.getAuthorMetrics(auth_id)
-        return author
+def getAuthorInfo(auth_id):
+    author = sApi.getAuthorMetrics(auth_id)
+    return author
