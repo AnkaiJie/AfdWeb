@@ -392,7 +392,7 @@ def storeAuthorTest(author_id):
     print(author_id)
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1):
+def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1, workers=5):
     author_profile = sApi.getAuthorMetrics(auth_id)
     author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
     dbi = DbInterface(author_identifier)
@@ -404,7 +404,7 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=
     papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
     print(grouper(1, papers))
-    executor = concurrent.futures.ProcessPoolExecutor(5)    
+    executor = concurrent.futures.ProcessPoolExecutor(workers)    
     processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, refCount)
         for paper_arr in grouper(1, papers)]
     for p in processes:
