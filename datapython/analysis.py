@@ -12,9 +12,10 @@ plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid):
+    def __init__(self, authid, table_names):
         self.api = ScopusApiLib()
         self.authname = self.getAuthorName(authid)
+        self.table_names = table_names
 
     def getAuthorName(self, id):
         details = self.api.getAuthorMetrics(id)
@@ -23,7 +24,7 @@ class Analysis:
     def getOvercites(self, authid):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
-        cmd = "select * from author_overcites where targ_author_id=" + "'" + authid + "'" + " order by overcites desc"
+        cmd = "select * from " + self.table_names['overcite'] + " where targ_author_id=" + "'" + authid + "'" + " order by overcites desc"
 
         curs.execute(cmd)
         rows = curs.fetchall()

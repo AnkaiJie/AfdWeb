@@ -1,11 +1,11 @@
-from credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
+from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import requests
 import json
 import time
 import concurrent.futures
 import pymysql
 import time
-from sql import *
+from datapython.sql import *
 
 class reqWrapper:
     def __init__(self, headers):
@@ -63,6 +63,7 @@ class ScopusApiLib:
         if 'AUTHOR_ID' in auth_id:
             auth_id = auth_id.split(':')[1]
 
+        #cited by order
         url = "http://api.elsevier.com/content/search/scopus?query=AU-ID(" + auth_id + ")&field=eid&sort=citedby-count&start=" + \
             str(start) + "&count=" + str(num)
         if start is not 0:
@@ -303,7 +304,7 @@ class DbInterface:
         self.utility.changeValueString(aggDict, '\\', '')
         self.utility.changeValueString(aggDict, '"', '\\"')
 
-        print(self.toString(aggDict))
+        # print(self.toString(aggDict))
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
@@ -319,6 +320,7 @@ class DbInterface:
             raise
         self.conn.commit()
         cur.close()
+        return getTableNames(self.author_id)
 
 
     def toString(self, aggDict):
@@ -392,7 +394,7 @@ def storeAuthorTest(author_id):
     print(author_id)
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=-1, workers=5):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, refCount=-1, workers=5):
     author_profile = sApi.getAuthorMetrics(auth_id)
     author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
     dbi = DbInterface(author_identifier)
@@ -403,16 +405,18 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=100, cite_num=100, refCount=
     print('Getting author papers')
     papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
-    print(grouper(1, papers))
+
     executor = concurrent.futures.ProcessPoolExecutor(workers)    
     processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, refCount)
-        for paper_arr in grouper(1, papers)]
+        for paper_arr in grouper(2, papers)]
     for p in processes:
         p.result()
 
     print('Beginning processing of s2 and overcite table.')
-    dbi.processOvercites()
+    table_names = dbi.processOvercites()
     print('Done.')
+    return table_names
+
 
 def grouper(lengths, arr):
     arrarr = []
@@ -426,7 +430,7 @@ def grouper(lengths, arr):
 
 def processPaperMain(author_id, papers, cite_num,refCount):
     for eid in papers:
-        print('Beginning processing for paper: ' + eid)
+        print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
         #main_title = self.storePapersOnly(eid)
         # references = sApi.getPaperReferences(eid, refCount=refCount)
         # if references is None:

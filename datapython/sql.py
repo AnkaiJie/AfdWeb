@@ -79,3 +79,9 @@ def create_overcites(author_id):
         group by targ_author_id, src_paper_eid, author_num
         """
     return s
+
+def getTableNames(author_id):
+    tab1_name = author_id + "_citations_s1"
+    overname = author_id + "_overcites"
+    tab2_name = author_id + "_citations_s2"
+    return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}
