@@ -308,20 +308,50 @@ class DbInterface:
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
-        s2_command = create_s2(self.author_id)
+        self.processS2()
         overcite_command = create_overcites(self.author_id)
+        check_overcites_cmd = check_overcites(self.author_id)
+        update_overcites_cmd = update_overcites(self.author_id)
         cur = self.conn.cursor()
         try:
-            cur.execute(s2_command)
-            cur.execute(overcite_command)
+            cur.execute(check_overcites_cmd)
+            row = cur.fetchone()
+            if row[0] == 0:
+                cur.execute(overcite_command)
+                print('create overcites')
+            else:
+                cur.execute(update_overcites_cmd)
+                print('update overcites')
         except:
-            print(s2_command)
             print(overcite_command)
+            print(check_overcites_cmd)
+            print(update_overcites_cmd)
             raise
         self.conn.commit()
         cur.close()
         return getTableNames(self.author_id)
 
+    def processS2(self):
+        s2_command = create_s2(self.author_id)
+        check_s2_cmd = check_s2(self.author_id)
+        update_s2_cmd = update_s2(self.author_id)
+        cur = self.conn.cursor()
+        try:
+            cur.execute(check_s2_cmd)
+            row = cur.fetchone()
+            if row[0] == 0:
+                cur.execute(s2_command)
+                print('create s2')
+            else:
+                cur.execute(update_s2_cmd)
+                print('update s2')
+        except:
+            print(s2_command)
+            print(check_s2_cmd)
+            print(update_s2_cmd)
+            raise
+        self.conn.commit()
+        cur.close()
 
     def toString(self, aggDict):
         srcp = None
@@ -347,7 +377,6 @@ class DbInterface:
     def createTables(self):
         s1_command = create_s1(self.author_id)
         check_s1_cmd = check_s1(self.author_id)
-        prim_key = create_s1_key(self.author_id)
         cur = self.conn.cursor()
         try:
             cur.execute(check_s1_cmd)
@@ -355,8 +384,6 @@ class DbInterface:
             if row[0] == 0:
                 cur.execute(s1_command)
                 print('create s1')
-                cur.execute(prim_key)
-                print('prim key s1')
         except:
             print(s1_command)
             print(check_s1_cmd)

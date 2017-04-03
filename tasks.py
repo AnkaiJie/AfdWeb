@@ -64,7 +64,7 @@ def fix_multiprocessing(**kwargs):
 
 @capp.task
 def run_overcite_script(author_id, name, email):
-    table_names = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1, workers=1)
+    table_names = storeAuthorMain(author_id, start_index=0, pap_num=5, cite_num=2, workers=5)
     analyze(author_id, name, email, table_names)
 
 
