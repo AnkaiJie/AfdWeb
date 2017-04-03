@@ -21,9 +21,6 @@ def send_email(author_id, name, email, zipath):
     fromaddr = "kingshruf8@gmail.com"
     toaddr = email
     msg = MIMEText("Hello " + name + ", analyzing " + author_id)
-    msg['From'] = "kingshruf8@gmail.com"
-    msg['To'] = email
-    msg['Subject'] = "Analysis for author " + author_id
 
     fullEmail = MIMEMultipart()
     filename = zipath.split('/')[2]
@@ -32,6 +29,10 @@ def send_email(author_id, name, email, zipath):
     part.set_payload((attachment).read())
     encoders.encode_base64(part)
     part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+    
+    fullEmail['Subject'] = "Analysis for author " + str(author_id)
+    fullEmail['From'] = "kingshruf8@gmail.com"
+    fullEmail['To'] = email
 
     fullEmail.attach(msg)
     fullEmail.attach(part)
@@ -64,7 +65,7 @@ def fix_multiprocessing(**kwargs):
 
 @capp.task
 def run_overcite_script(author_id, name, email):
-    table_names = storeAuthorMain(author_id, start_index=0, pap_num=5, cite_num=2, workers=5)
+    table_names = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=2, workers=5)
     analyze(author_id, name, email, table_names)
 
 
