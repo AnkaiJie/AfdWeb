@@ -78,14 +78,16 @@ class ScopusApiLib:
     def getCitingPapers(self, eid, num=100, sort_order="date"):
         #eid = '2-s2.0-79956094375'
         url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&count=' + str(num)
-        if sort_order == "citations":
+        if sort_order == "citations_increase":
             url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=+citedby-count&count=' + str(num)
+        elif sort_order == "citations_decrease":
+            url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=-citedby-count&count=' + str(num)
         resp = self.reqs.getJson(url)
 
         resp = resp['search-results']['entry']
         if 'error' in resp[0] and resp[0]['error'] == 'Result set was empty':
             return []
-        #print(resp)
+        # print(resp)
         paps = [pap['eid'] for pap in resp]
         return paps
 
@@ -93,9 +95,9 @@ class ScopusApiLib:
     def getPaperInfo(self, eid):
         url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid) + '?&field=authors,coverDate,eid,title,publicationName'
         resp = self.reqs.getJson(url)
+        # print(self.prettifyJson(resp))
         try:
             if 'service-error' in resp:
-                time.sleep(3)
                 resp = self.reqs.getJson(url)
                 if 'service-error' in resp:
                     print("SERVICE ERROR Citing")
@@ -278,18 +280,18 @@ class Utility:
 
 # all the SQL code to insert/update is here
 class DbInterface:
-    def __init__(self, author_id):
+    def __init__(self, author_id, citing_sort):
         self.utility = Utility()
         self.scops = ScopusApiLib()
         self.author_id = author_id
-
+        self.sqlTool = SqlCommand(author_id, citing_sort)
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         self.createTables()
         
 
     def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor):
 
-        s1_table = self.author_id + "_citations_s1"
+        s1_table = self.sqlTool.get_s1_name()
 
         srcPaperDict = self.utility.addPrefixToKeys(srcPaperDict, 'src_paper_')
         targPaperDict = self.utility.addPrefixToKeys(targPaperDict, 'targ_paper_')
@@ -304,14 +306,14 @@ class DbInterface:
         self.utility.changeValueString(aggDict, '\\', '')
         self.utility.changeValueString(aggDict, '"', '\\"')
 
-        # print(self.toString(aggDict))
+        print(self.toString(aggDict))
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
         self.processS2()
-        overcite_command = create_overcites(self.author_id)
-        check_overcites_cmd = check_overcites(self.author_id)
-        update_overcites_cmd = update_overcites(self.author_id)
+        overcite_command = self.sqlTool.create_overcites()
+        check_overcites_cmd = self.sqlTool.check_overcites()
+        update_overcites_cmd = self.sqlTool.update_overcites()
         cur = self.conn.cursor()
         try:
             cur.execute(check_overcites_cmd)
@@ -329,12 +331,12 @@ class DbInterface:
             raise
         self.conn.commit()
         cur.close()
-        return getTableNames(self.author_id)
+        return self.sqlTool.getTableNames()
 
     def processS2(self):
-        s2_command = create_s2(self.author_id)
-        check_s2_cmd = check_s2(self.author_id)
-        update_s2_cmd = update_s2(self.author_id)
+        s2_command = self.sqlTool.create_s2()
+        check_s2_cmd = self.sqlTool.check_s2()
+        update_s2_cmd = self.sqlTool.update_s2()
         cur = self.conn.cursor()
         try:
             cur.execute(check_s2_cmd)
@@ -375,8 +377,8 @@ class DbInterface:
         return 'Source: ' + str(srca) +' / ' + str(srce) + ' / ' + str(srcp) + ' ------------- ' + 'Target: ' + str(targa) +' / ' + str(targe) + ' / ' + str(targp)
 
     def createTables(self):
-        s1_command = create_s1(self.author_id)
-        check_s1_cmd = check_s1(self.author_id)
+        s1_command = self.sqlTool.create_s1()
+        check_s1_cmd = self.sqlTool.check_s1()
         cur = self.conn.cursor()
         try:
             cur.execute(check_s1_cmd)
@@ -421,10 +423,10 @@ def storeAuthorTest(author_id):
     print(author_id)
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, refCount=-1, workers=5):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_increase", refCount=-1, workers=10):
     author_profile = sApi.getAuthorMetrics(auth_id)
     author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
-    dbi = DbInterface(author_identifier)
+    dbi = DbInterface(author_identifier, citing_sort)
     # Puts the main author record
     print('Running script on author: ' + str(auth_id))
     
@@ -434,7 +436,7 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, refCount=-1
 
 
     executor = concurrent.futures.ProcessPoolExecutor(workers)    
-    processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, refCount)
+    processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, citing_sort, refCount)
         for paper_arr in grouper(2, papers)]
     for p in processes:
         p.result()
@@ -455,7 +457,7 @@ def grouper(lengths, arr):
         arrarr.append(sub)
     return arrarr
 
-def processPaperMain(author_id, papers, cite_num,refCount):
+def processPaperMain(author_id, papers, cite_num, citing_sort, refCount):
     for eid in papers:
         print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
         #main_title = self.storePapersOnly(eid)
@@ -463,7 +465,7 @@ def processPaperMain(author_id, papers, cite_num,refCount):
         # if references is None:
         #     print('No Data on References')
         #     references = []
-        citedbys = sApi.getCitingPapers(eid, num=cite_num, sort_order="citations")
+        citedbys = sApi.getCitingPapers(eid, num=cite_num, sort_order=citing_sort)
         thisPaperDict = sApi.getPaperInfo(eid) #do this here to avoid duplicate api calls
         if thisPaperDict is None:
             print("NONE MAIN PAPER")
@@ -480,8 +482,8 @@ def processPaperMain(author_id, papers, cite_num,refCount):
             if citePaperDict is None:
                 print("NONE CITING PAPER")
                 continue
-            storeCiting(dict(citePaperDict), dict(thisPaperDict), author_id)
-            storePaperReferences(citing, dict(citePaperDict), author_id, refCount=refCount)
+            storeCiting(dict(citePaperDict), dict(thisPaperDict), author_id, citing_sort)
+            storePaperReferences(citing, dict(citePaperDict), author_id, citing_sort, refCount=refCount)
             ccount += 1
         print('Done citing papers.')
         # # Puts the cited papers of the authors papers, and those respective authors
@@ -494,8 +496,8 @@ def processPaperMain(author_id, papers, cite_num,refCount):
         #     self.storePaperReferences(refid, refCount=refCount)
         # print('Done references')
 
-def storePaperReferences(eid, srcPaperDict, author_id, refCount=-1, ):
-    dbi = DbInterface(author_id)
+def storePaperReferences(eid, srcPaperDict, author_id, citing_sort, refCount=-1, ):
+    dbi = DbInterface(author_id, citing_sort)
     references = sApi.getPaperReferences(eid, refCount=refCount)
     if references is None:
         return
@@ -512,8 +514,8 @@ def storePaperReferences(eid, srcPaperDict, author_id, refCount=-1, ):
             for targAuth in targAuthors:
                 dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
 
-def storeCiting(srcPaperDict, targPaperDict, author_id):
-    dbi = DbInterface(author_id)
+def storeCiting(srcPaperDict, targPaperDict, author_id, citing_sort):
+    dbi = DbInterface(author_id, citing_sort)
     srcAuthors = [{'indexed_name': None}]
     targAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict:

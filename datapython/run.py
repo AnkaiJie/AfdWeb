@@ -7,5 +7,6 @@ import apilib
 
 
 
-apilib.storeAuthorMain(22954842600, start_index=0, pap_num=5, cite_num=5, workers=5)
+# apilib.storeAuthorMain(22954842600, start_index=0, pap_num=1, cite_num=4, workers=5)
+apilib.storeAuthorMain(22954842600, start_index=0, pap_num=1, cite_num=4, citing_sort="citations_decrease", workers=5)
 
