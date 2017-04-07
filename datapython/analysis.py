@@ -16,6 +16,7 @@ class Analysis:
         self.api = ScopusApiLib()
         self.authname = self.getAuthorName(authid)
         self.table_names = table_names
+        self.citing_sort = citing_sort
 
     def getAuthorName(self, id):
         details = self.api.getAuthorMetrics(id)
@@ -52,7 +53,7 @@ class Analysis:
         if (len(papers) < 25):
             num = len(papers)
         ax.set_title('Influence Bar Graph: Top ' + str(num) + ' overciting papers for author ' + authname + ' from ' + str(len(df)) + ' citing papers')
-        savename = 'datapython/graphs/OverBar_' + '_'.join(authname.split()) + '_' + citing_sort + '.png'
+        savename = 'datapython/graphs/OverBar_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
         if save:
             fig.savefig(savename)
         else:
@@ -87,7 +88,7 @@ class Analysis:
         ax.set_ylabel('Number of Papers with Overcite Amount')
         ax.set_xlabel('Number of Overcites')
         ax.set_title('Influence Histogram: citation frequency for papers with >=' + str(threshold) + ' overcites \n from ' + str(len(df)) + ' citing papers for ' + authname)
-        savename = 'datapython/graphs/OverHist_' + '_'.join(authname.split()) + '_' + citing_sort + '.png'
+        savename = 'datapython/graphs/OverHist_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
         if save:
             fig.savefig(savename)
         elif save:
@@ -100,7 +101,7 @@ class Analysis:
     def overcitesCsv(self, authid):
         authname = self.authname
         df = self.getOvercites(authid)
-        name = 'datapython/graphs/OverCites_' + '_'.join(authname.split()) + '_' + citing_sort +  '.csv'
+        name = 'datapython/graphs/OverCites_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
         writer.writerow(['Target Author', 'Target Author Name', 'Citing Paper',
             'Citing Paper Title', 'Citing Paper Authors' 'Number of Authors', 'Citation Count'])

@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from config import *
-# from celery import Celery, shared_task
-# from celery.utils.log import get_task_logger
-# from celery.signals import worker_process_init
+from celery import Celery, shared_task
+from celery.utils.log import get_task_logger
+from celery.signals import worker_process_init
 import smtplib
 from zipfile import ZipFile
 from email.mime.text import MIMEText
@@ -73,11 +73,10 @@ def fix_multiprocessing(**kwargs):
 
 @capp.task
 def run_overcite_script(author_id, name, email):
-    table_names_bylast = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=5, 
+    table_names_bylast = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1, 
         citing_sort="citations_increase", workers=5)
-    table_names_byfront = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=5,
+    table_names_byfront = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1,
         citing_sort="citations_decrease", workers=5)
     analyze(author_id, name, email, table_names_bylast, table_names_byfront)
 
-run_overcite_script(22954842600, "Ankai", "email")
 

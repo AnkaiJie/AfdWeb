@@ -306,7 +306,7 @@ class DbInterface:
         self.utility.changeValueString(aggDict, '\\', '')
         self.utility.changeValueString(aggDict, '"', '\\"')
 
-        print(self.toString(aggDict))
+        # print(self.toString(aggDict))
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
@@ -437,7 +437,7 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort
 
     executor = concurrent.futures.ProcessPoolExecutor(workers)    
     processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, citing_sort, refCount)
-        for paper_arr in grouper(2, papers)]
+        for paper_arr in grouper(1, papers)]
     for p in processes:
         p.result()
 
