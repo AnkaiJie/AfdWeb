@@ -46,24 +46,27 @@ def send_email(author_id, name, email, zipath):
 
 def analyze(author_id, name, email, table_names_bylast, table_names_byfront):
     to_zip = []
+    # least cited citing papers
     tool = Analysis(author_id, table_names_bylast, citing_sort="bottom_citing")
     barpath = tool.plotOvercitesBar(author_id)
     histpath = tool.plotOvercitesHist(author_id)
     csvpath = tool.overcitesCsv(author_id)
     to_zip += [barpath, histpath, csvpath]
 
+    # most cited citing papers
     tool2 = Analysis(author_id, table_names_byfront, citing_sort="top_citing")
-    barpath2 = tool.plotOvercitesBar(author_id)
-    histpath2 = tool.plotOvercitesHist(author_id)
-    csvpath2 = tool.overcitesCsv(author_id)
+    barpath2 = tool2.plotOvercitesBar(author_id)
+    histpath2 = tool2.plotOvercitesHist(author_id)
+    csvpath2 = tool2.overcitesCsv(author_id)
     to_zip += [barpath2, histpath2, csvpath2]
+
 
     zipath = 'datapython/graphs/' + author_id + '_overcitedata.zip'
     with ZipFile(zipath, 'w') as myzip:
         for path in to_zip:
             myzip.write(path)
 
-    # send_email(author_id, name, email, zipath)
+    send_email(author_id, name, email, zipath)
 
 @worker_process_init.connect
 def fix_multiprocessing(**kwargs):

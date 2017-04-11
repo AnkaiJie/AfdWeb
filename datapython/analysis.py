@@ -104,7 +104,7 @@ class Analysis:
         name = 'datapython/graphs/OverCites_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
         writer.writerow(['Target Author', 'Target Author Name', 'Citing Paper',
-            'Citing Paper Title', 'Citing Paper Authors' 'Number of Authors', 'Citation Count'])
+            'Citing Paper Title', 'Citing Paper Authors', 'Number of Authors', 'Citation Count'])
 
         author_info = self.api.getAuthorMetrics(authid)
         authname = 'Unknown'
