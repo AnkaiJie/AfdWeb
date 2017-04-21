@@ -155,7 +155,7 @@ class SqlCommand:
                 `author_num`,
                 `overcites`
             )
-            select inter.targ_author_id, inter.src_paper_eid, count(inter.src_author_id) as author_num,
+            select inter.targ_author_id, inter.src_paper_eid, count(distinct inter.src_author_id) as author_num,
                 count(distinct inter.targ_paper_eid) as overcites from 
             (select targ_author_id, targ_paper_eid, src_paper_eid, 
                 src_author_id, min(paper_index) as paper_index, 
@@ -172,7 +172,7 @@ class SqlCommand:
         tab2_name = self.prefix + "_citations_s2"
 
         s = """create table """ + tab_name + """ as
-            select inter.targ_author_id, inter.src_paper_eid, count(inter.src_author_id) as author_num,
+            select inter.targ_author_id, inter.src_paper_eid, count(distinct inter.src_author_id) as author_num,
                 count(distinct inter.targ_paper_eid) as overcites from 
             (select targ_author_id, targ_paper_eid, src_paper_eid, 
                 src_author_id, min(paper_index) as paper_index, 
