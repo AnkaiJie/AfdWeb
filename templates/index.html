@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Academic Fraud Detecto</title>
+  <title>Academic Fraud Detector</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -13,20 +13,31 @@
 
 <div class="container">  
   <form id="contact" action="/request/overcitesAuthor" method="post">
-    <h2>Academic Overcite Analyzer</h2>
+    <h2>Academic Citation Analyzer</h2>
     <h4>Input an author to investigate</h4>
     <fieldset>
-      <input placeholder="Your name" type="text" name="name" tabindex="1" required autofocus>
+      <input placeholder="Scopus ID of author" name="author_id" type="number" required autofocus>
     </fieldset>
     <fieldset>
-      <input placeholder="Your Email Address" name="email" type="email" tabindex="2" required>
+      <input placeholder="Number of papers to investigate (1-25)" name="paper_num" type="number" min="1" max="25" required>
     </fieldset>
     <fieldset>
-      <input placeholder="Scopus ID of author" name="author_id" type="number" tabindex="3" required>
+      <input placeholder="Number of citing papers for each paper (1-25)"  name="cite_num" type="number" min="1" max="25" required>
+    </fieldset>
+    <fieldset>
+      <input placeholder="Your name" type="text" name="name" required>
+    </fieldset>
+    <fieldset>
+      <input placeholder="Your Email Address" name="email" type="email" required>
     </fieldset>
       <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
     </fieldset>
+    <div style="text-align:center">
+      <a href="{{ url_for('static',filename='what-is-influence.pdf') }}"  target="_blank"> Need Help? </a>
+     </div>
   </form>
+
+
 </div>
 
 </body>
