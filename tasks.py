@@ -18,7 +18,7 @@ capp.config_from_object(CeleryConfig)
 logger = get_task_logger(APP_NAME)
 
 def send_email(author_id, name, email, zipath):
-    fromaddr = "kingshruf8@gmail.com"
+    fromaddr = "academic.influence.analyzer@gmail.com"
     toaddr = email
     msg = MIMEText("Hello " + name + ", analyzing " + author_id)
 
@@ -31,7 +31,7 @@ def send_email(author_id, name, email, zipath):
     part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
     
     fullEmail['Subject'] = "Analysis for author " + str(author_id)
-    fullEmail['From'] = "kingshruf8@gmail.com"
+    fullEmail['From'] = "academic.influence.analyzer@gmail.com"
     fullEmail['To'] = email
 
     fullEmail.attach(msg)
@@ -47,19 +47,20 @@ def send_email(author_id, name, email, zipath):
 def analyze(author_id, name, email, table_names_bylast, table_names_byfront):
     to_zip = []
     # least cited citing papers
-    tool = Analysis(author_id, table_names_bylast, citing_sort="bottom_citing")
+    tool = Analysis(author_id, table_names_bylast, citing_sort="lower_citing")
     barpath = tool.plotOvercitesBar(author_id)
     histpath = tool.plotOvercitesHist(author_id)
     csvpath = tool.overcitesCsv(author_id)
     to_zip += [barpath, histpath, csvpath]
 
     # most cited citing papers
-    tool2 = Analysis(author_id, table_names_byfront, citing_sort="top_citing")
+    tool2 = Analysis(author_id, table_names_byfront, citing_sort="upper_citing")
     barpath2 = tool2.plotOvercitesBar(author_id)
     histpath2 = tool2.plotOvercitesHist(author_id)
     csvpath2 = tool2.overcitesCsv(author_id)
     to_zip += [barpath2, histpath2, csvpath2]
 
+    to_zip += ['datapython/graphs/README.pdf']
 
     zipath = 'datapython/graphs/' + author_id + '_overcitedata.zip'
     with ZipFile(zipath, 'w') as myzip:
@@ -75,11 +76,11 @@ def fix_multiprocessing(**kwargs):
     current_process().daemon = False
 
 @capp.task
-def run_overcite_script(author_id, name, email):
-    table_names_bylast = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1, 
-        citing_sort="citations_increase", workers=5)
-    table_names_byfront = storeAuthorMain(author_id, start_index=0, pap_num=1, cite_num=1,
-        citing_sort="citations_decrease", workers=5)
+def run_overcite_script(author_id, pnum, cnum, name, email):
+    table_names_bylast = storeAuthorMain(author_id, start_index=0, pap_num=pnum, cite_num=cnum, 
+        citing_sort="citations_lower", workers=10)
+    table_names_byfront = storeAuthorMain(author_id, start_index=0, pap_num=pnum, cite_num=cnum,
+        citing_sort="citations_upper", workers=10)
     analyze(author_id, name, email, table_names_bylast, table_names_byfront)
 
 

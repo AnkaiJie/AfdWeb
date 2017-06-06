@@ -78,9 +78,9 @@ class ScopusApiLib:
     def getCitingPapers(self, eid, num=100, sort_order="date"):
         #eid = '2-s2.0-79956094375'
         url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&count=' + str(num)
-        if sort_order == "citations_increase":
+        if sort_order == "citations_lower":
             url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=+citedby-count&count=' + str(num)
-        elif sort_order == "citations_decrease":
+        elif sort_order == "citations_upper":
             url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=-citedby-count&count=' + str(num)
         resp = self.reqs.getJson(url)
 
@@ -280,16 +280,32 @@ class Utility:
 
 # all the SQL code to insert/update is here
 class DbInterface:
-    def __init__(self, author_id, citing_sort):
+    def __init__(self, author_id, citing_sort, paper_num, citing_num):
+        self.paper_num = paper_num
+        self.citing_num = citing_num
+        self.citing_sort = citing_sort
         self.utility = Utility()
         self.scops = ScopusApiLib()
         self.author_id = author_id
-        self.sqlTool = SqlCommand(author_id, citing_sort)
+        self.sqlTool = SqlCommand(author_id, citing_sort, paper_num, citing_num)
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
-        self.createTables()
-        
 
-    def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor):
+    def rangeExistsOrAdd(self):
+        rangeTable = 'range_table_' + self.citing_sort + "3"
+        cur = self.conn.cursor()
+        cur.execute("select max(paper_num) as pnum, max(citing_num) as cnum from " + rangeTable)
+        row = cur.fetchone()
+        pnum = row[0]
+        cnum = row[1]
+        if pnum and cnum and int(self.paper_num) <= pnum and int(self.citing_num) <= cnum:
+            return True
+        else:
+            toAdd = "(" + str(self.paper_num) + ", " + str(self.citing_num) + ")"
+            cur.execute("insert into " + rangeTable + " values " + toAdd)
+            return False
+
+
+    def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict):
 
         s1_table = self.sqlTool.get_s1_name()
 
@@ -298,7 +314,7 @@ class DbInterface:
         srcAuthor = self.utility.addPrefixToKeys(srcAuthor, 'src_author_')
         targAuthor = self.utility.addPrefixToKeys(targAuthor, 'targ_author_')
 
-        aggDict = self.utility.merge_dicts(srcPaperDict, targPaperDict, srcAuthor, targAuthor)
+        aggDict = self.utility.merge_dicts(srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict)
         self.utility.removeNone(aggDict)
         self.utility.changeKeyString(aggDict, '-', '_')
         self.utility.changeKeyString(aggDict, '@', '')
@@ -310,7 +326,6 @@ class DbInterface:
         self.pushDict(s1_table, aggDict)
 
     def processOvercites(self):
-        self.processS2()
         overcite_command = self.sqlTool.create_overcites()
         check_overcites_cmd = self.sqlTool.check_overcites()
         update_overcites_cmd = self.sqlTool.update_overcites()
@@ -415,7 +430,6 @@ class DbInterface:
 # all the API return value parsing should be placed here
 # any text/key processing is done here
 # there is no sql code in this class, that should all be handled in DbInterface()
-
 dbi = None
 sApi = ScopusApiLib()
 
@@ -423,25 +437,40 @@ def storeAuthorTest(author_id):
     print(author_id)
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_increase", refCount=-1, workers=10):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_lower", refCount=-1, workers=10):
     author_profile = sApi.getAuthorMetrics(auth_id)
     author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
-    dbi = DbInterface(author_identifier, citing_sort)
-    # Puts the main author record
-    print('Running script on author: ' + str(auth_id))
-    
-    # Puts the authors papers
-    print('Getting author papers')
-    papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
+    dbi = DbInterface(author_identifier, citing_sort, pap_num, cite_num)
+    dbi.createTables()
+
+    already = dbi.rangeExistsOrAdd()
+    if (already):
+        print("Range exists, skipping s1/s2")
+    else:
+        # Puts the main author record
+        print('Beginning processing of S1 table for : ' + str(auth_id))
+        
+        # Puts the authors papers
+        print('Getting author papers')
+        papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
 
-    executor = concurrent.futures.ProcessPoolExecutor(workers)    
-    processes = [executor.submit(processPaperMain, author_identifier, paper_arr, cite_num, citing_sort, refCount)
-        for paper_arr in grouper(1, papers)]
-    for p in processes:
-        p.result()
+        executor = concurrent.futures.ProcessPoolExecutor(workers)
+        paper_counter = 1
+        processes = []
+        for paper_arr in grouper(1, papers):
+            processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, cite_num, citing_sort, refCount))
+            paper_counter += len(paper_arr)
 
-    print('Beginning processing of s2 and overcite table.')
+        # processes = [executor.submit(processPaperMain, author_identifier, paper_arr, pap_num, cite_num, citing_sort, refCount)
+        #     for paper_arr in grouper(1, papers)]
+        for p in processes:
+            p.result()
+
+        print('Beginning processing of s2 table.')
+        dbi.processS2()
+
+    print('Beginning processing of overcite table.')
     table_names = dbi.processOvercites()
     print('Done.')
     return table_names
@@ -457,7 +486,8 @@ def grouper(lengths, arr):
         arrarr.append(sub)
     return arrarr
 
-def processPaperMain(author_id, papers, cite_num, citing_sort, refCount):
+def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing_sort, refCount):
+
     for eid in papers:
         print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
         #main_title = self.storePapersOnly(eid)
@@ -476,15 +506,18 @@ def processPaperMain(author_id, papers, cite_num, citing_sort, refCount):
         print('Handling citing papers...')
 
         ccount = 1
-        for citing in citedbys:
+        for citeIdx, citing in enumerate(citedbys):
             print('Citing paper index number: ' + str(ccount))
             citePaperDict = sApi.getPaperInfo(citing)
             if citePaperDict is None:
                 print("NONE CITING PAPER")
                 continue
-            storeCiting(dict(citePaperDict), dict(thisPaperDict), author_id, citing_sort)
-            storePaperReferences(citing, dict(citePaperDict), author_id, citing_sort, refCount=refCount)
+            storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, cite_num,
+                paper_counter, citeIdx + 1, author_id, citing_sort)
+            storePaperReferences(citing, dict(citePaperDict), pap_num, cite_num,
+                paper_counter, citeIdx + 1, author_id, citing_sort, refCount=refCount)
             ccount += 1
+        paper_counter += 1
         print('Done citing papers.')
         # # Puts the cited papers of the authors papers, and those respective authors
         # print('Handling references...')
@@ -496,14 +529,19 @@ def processPaperMain(author_id, papers, cite_num, citing_sort, refCount):
         #     self.storePaperReferences(refid, refCount=refCount)
         # print('Done references')
 
-def storePaperReferences(eid, srcPaperDict, author_id, citing_sort, refCount=-1, ):
-    dbi = DbInterface(author_id, citing_sort)
+def storePaperReferences(eid, srcPaperDict, pap_num, cite_num, papIdx, citeIdx, author_id, citing_sort, refCount=-1, ):
+    dbi = DbInterface(author_id, citing_sort, pap_num, cite_num)
     references = sApi.getPaperReferences(eid, refCount=refCount)
     if references is None:
         return
     srcAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict and srcPaperDict['authors'] is not None:
         srcAuthors = srcPaperDict.pop('authors')
+
+    #This record dict is used to keep track the paper num and citing paper num of record
+    # This is useful for creating a huge master S1/S2 table, then creating overcite table
+    #   from a subset, such as top 10 papers, and top 20 citing papers
+    record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
 
     for targPaperDict in references:
         targAuthors = [{'indexed_name': None}]
@@ -512,10 +550,10 @@ def storePaperReferences(eid, srcPaperDict, author_id, citing_sort, refCount=-1,
 
         for srcAuth in srcAuthors:
             for targAuth in targAuthors:
-                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
 
-def storeCiting(srcPaperDict, targPaperDict, author_id, citing_sort):
-    dbi = DbInterface(author_id, citing_sort)
+def storeCiting(srcPaperDict, targPaperDict, pap_num, cite_num, papIdx, citeIdx, author_id, citing_sort):
+    dbi = DbInterface(author_id, citing_sort, pap_num, cite_num)
     srcAuthors = [{'indexed_name': None}]
     targAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict:
@@ -523,9 +561,11 @@ def storeCiting(srcPaperDict, targPaperDict, author_id, citing_sort):
     if 'authors' in targPaperDict:
         targAuthors = targPaperDict.pop('authors')
 
+    record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
+
     for srcAuth in srcAuthors:
         for targAuth in targAuthors:
-            dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+            dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
 
 
 # def storeToStage1(self, srcpapid, targpapid):

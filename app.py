@@ -17,11 +17,12 @@ def send_overcites():
     runner = ScopusApiLib()
     # print(form['author_id'])
     try:
-    	testAuthor = runner.getAuthorMetrics(form['author_id'])
-    	result = run_overcite_script.delay(form['author_id'], form['name'], form['email'])
-    	return render_template('finish.html') 
+        runner.getAuthorMetrics(form['author_id'])
+        run_overcite_script.delay(form['author_id'], form['paper_num'],
+            form['cite_num'], form['name'], form['email'])
+        return render_template('finish.html') 
     except KeyError as e:
-    	return render_template('error.html') 
+        return render_template('error.html') 
     
 
 
