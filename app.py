@@ -4,7 +4,7 @@ from config import APP_NAME
 from tasks import run_overcite_script
 from datapython.apilib import ScopusApiLib
 
-app = Flask(APP_NAME)
+app = Flask(__name__)
 
 @app.route('/')
 def index():
@@ -24,8 +24,5 @@ def send_overcites():
     except KeyError as e:
         return render_template('error.html') 
     
-
-
-
-
-app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
