@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Academic Influence</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container"> 
+  <form id="contact" action="/afdserver/" method="get">
+    <h2>ERROR: Author ID</h2>
+    <div>
+      <h4>
+        Sorry, it seems that the author ID you entered does not exist in the scopus database. To try again, click on the button below.
+      </h4>
+    </div>
+    </fieldset>
+      <button type="submit" name="return">Make another request</button>
+    </fieldset>
+  </form>
+</div>
+
+</body>
+</html>

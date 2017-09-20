@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Academic Influence</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">  
+  <form id="contact" action="/afdserver/request/overcitesAuthor" method="post">
+    <div style="text-align:center"><h2>Academic Influence Analyzer</h2></div>
+    <h4>Input an author to investigate</h4>
+    <fieldset>
+      <input placeholder="Scopus ID of author" name="author_id" type="number" required autofocus>
+    </fieldset>
+    <div style="text-align:center;font-weight:bold;">
+      <a href="{{ url_for('static',filename='how-sid.pdf') }}"  target="_blank"> How to get Scopus ID? </a>
+    </div>
+    <fieldset>
+      <input placeholder="Number of papers to investigate (1-25)" name="paper_num" type="number" min="1" max="25" required>
+    </fieldset>
+    <fieldset>
+      <input placeholder="Number of citing papers for each paper (1-25)"  name="cite_num" type="number" min="1" max="25" required>
+    </fieldset>
+    <fieldset>
+      <input placeholder="Your name" type="text" name="name" required>
+    </fieldset>
+    <fieldset>
+      <input placeholder="Your Email Address" name="email" type="email" required>
+    </fieldset>
+      <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
+    </fieldset>
+    <div style="text-align:center;font-size:150%;font-weight:bold;">
+      <a href="{{ url_for('static',filename='what-is-influence.pdf') }}"  target="_blank"> What does this app do? </a>
+     </div>
+  </form>
+
+
+</div>
+
+</body>
+</html>
+
