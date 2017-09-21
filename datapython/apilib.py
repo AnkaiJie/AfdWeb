@@ -5,6 +5,7 @@ import time
 import concurrent.futures
 import pymysql
 import time
+import datetime
 from datapython.sql import *
 
 class reqWrapper:
@@ -38,6 +39,7 @@ class ScopusApiLib:
     def getAuthorMetrics(self, auth_id):
         url = "http://api.elsevier.com/content/author?author_id=" + str(auth_id)
         resp = self.reqs.getJson(url)
+        # print(resp)
         resp = resp['author-retrieval-response'][0]
 
         pfields = ['preferred-name', 'publication-range']
@@ -91,10 +93,12 @@ class ScopusApiLib:
         return paps
 
     #returns basic info about a paper with the given eid
-    def getPaperInfo(self, eid):
+    def getPaperInfo(self, eid, reference=False):
         url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid) + '?&field=authors,coverDate,eid,title,publicationName'
+        if reference:
+            url = url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid)
         resp = self.reqs.getJson(url)
-        # print(self.prettifyJson(resp))
+        # print(self.prettifyJsonif(resp))
         try:
             if 'service-error' in resp:
                 resp = self.reqs.getJson(url)
@@ -106,13 +110,19 @@ class ScopusApiLib:
             print(resp)
             print(url)
             raise
-        coredata = resp['coredata']
-        if resp['authors']:
-            authors = resp['authors']['author']
-            auinfos = self.processAuthorList(authors)
-            coredata['authors'] = auinfos
-        coredata = self.utility.removePrefix(coredata)
-        return coredata
+
+        if reference:
+            # print(self.prettifyJson(resp))
+            ref_data = resp['item']['bibrecord']['tail']['bibliography']
+            return ref_data
+        else:
+            coredata = resp['coredata']
+            if resp['authors']:
+                authors = resp['authors']['author']
+                auinfos = self.processAuthorList(authors)
+                coredata['authors'] = auinfos
+            coredata = self.utility.removePrefix(coredata)
+            return coredata
 
     def processFirstName(self, name):
         return name.split()[0].strip()
@@ -154,9 +164,18 @@ class ScopusApiLib:
             req_url += '&refcount=' + str(refCount)
             custom_count = True
         else:
-            req_url += '&start='+ str(start) + '&refcount=40'
+            req_url += '&startref='+ str(start)
         
         ref_arr = []
+        i = 0
+
+        # For some stupid reason, Scopus API changed their reference paper title field to only give the publisher name
+        # So now we have to get paper names from a separate api response
+        alternate_ref_info = self.getPaperInfo(eid, reference=True)
+        alt_ref_list = alternate_ref_info['reference']
+        
+        notMatchAmt = 0
+
         while(True):
             time.sleep(0.2)
             resp = self.reqs.getJson(req_url)
@@ -181,10 +200,11 @@ class ScopusApiLib:
                 return None
             else:
                 resp_body = resp_body['references']['reference']
-
             current_refs = []
-            for raw in resp_body:
+            for idx, raw in enumerate(resp_body):
+
                 ref_dict = {}
+                current_reference_id = raw['@id']
                 ref_dict['authors'] = None
                 if raw['author-list'] and raw['author-list']['author']:
                     auth_list = raw['author-list']['author']
@@ -193,16 +213,34 @@ class ScopusApiLib:
 
                 #ref_dict['srceid'] = eid
                 ref_dict['eid'] = raw['scopus-eid']
-                if 'sourcetitle' in raw:
-                    ref_dict['publicationName'] = raw['sourcetitle']
+
+                alt_ref_idx = idx + start - 1
+                altrefid = current_reference_id
+                # Sometimes alt list is missing id field.
+                # In that case we will assume ordering is correct at risk of getting the wrong title
+                if '@id' in alt_ref_list[alt_ref_idx]:
+                    altrefid = alt_ref_list[alt_ref_idx]['@id']
+                if altrefid != current_reference_id:
+                    notMatchAmt += 1
+                    if notMatchAmt > 5:
+                        raise Exception('Alt ref ID does not match ref id too many times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
+                else:
+                    alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
+                    if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
+                        title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
+                        if isinstance(title_txt, list):
+                            title_txt = str(title_txt[0])
+                        ref_dict['publicationName'] = title_txt
+                # if 'sourcetitle' in raw:
+                #     ref_dict['publisherName'] = raw['sourcetitle']
                 current_refs.append(ref_dict)
 
             ref_arr += current_refs
             start += 40
-            req_url = url + '&start='+ str(start) + '&refcount=40'
+            req_url = url + '&startref='+ str(start)
             if custom_count:
                 break
-
+            i += 1
         return ref_arr
 
     #makes a jsonObj pretty
@@ -290,18 +328,27 @@ class DbInterface:
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
 
     def rangeExistsOrAdd(self):
-        rangeTable = 'range_table_' + self.citing_sort + "3"
+        rangeTable = 'range_table_' + self.citing_sort
         cur = self.conn.cursor()
-        cur.execute("select max(paper_num) as pnum, max(citing_num) as cnum from " + rangeTable)
+        cur.execute("select last_run_date, max_paper_num as pnum, max_citing_num as cnum from %s where author_id='%s'" % (rangeTable, self.author_id))
         row = cur.fetchone()
-        pnum = row[0]
-        cnum = row[1]
-        if pnum and cnum and int(self.paper_num) <= pnum and int(self.citing_num) <= cnum:
-            return True
-        else:
-            toAdd = "(" + str(self.paper_num) + ", " + str(self.citing_num) + ")"
-            cur.execute("insert into " + rangeTable + " values " + toAdd)
-            return False
+        today = datetime.datetime.now()
+        if row:
+            last_date = row[0]
+            pnum = row[1]
+            cnum = row[2]
+            date_diff = today - last_date
+            if pnum and cnum and int(self.paper_num) <= pnum and int(self.citing_num) <= cnum and date_diff.days < 365:
+                return True
+
+        toAdd = "('" + str(self.author_id) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + str(self.paper_num) + ", " + str(self.citing_num)  +")"
+        query = "insert into %s (author_id, last_run_date, max_paper_num, max_citing_num) \
+            values %s on duplicate key update author_id=values(author_id), last_run_date=values(last_run_date), \
+            max_paper_num=values(max_paper_num), max_citing_num=values(max_citing_num)" % (rangeTable, toAdd)
+        cur.execute(query)
+        self.conn.commit()
+        cur.close()
+        return False
 
 
     def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict):
@@ -412,7 +459,11 @@ class DbInterface:
         cur = self.conn.cursor()
         keys = d.keys()
         vals = d.values()
-        vals = ['"' + v + '"' for v in vals if v is not None]
+        try:
+            vals = ['"' + v + '"' for v in vals if v is not None]
+        except:
+            print (vals)
+            raise
         command = "REPLACE INTO %s (%s) VALUES(%s)" % (
             table, ",".join(keys), ",".join(vals))
         try:
