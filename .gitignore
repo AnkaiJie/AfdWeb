@@ -1,3 +1,5 @@
 __pycache__/
 afdenv/
 afdenv2/
+datapython/graphs/
+*.pyc

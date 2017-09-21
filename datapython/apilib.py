@@ -175,7 +175,7 @@ class ScopusApiLib:
         alt_ref_list = alternate_ref_info['reference']
         
         notMatchAmt = 0
-
+        refIDstatement = False
         while(True):
             time.sleep(0.2)
             resp = self.reqs.getJson(req_url)
@@ -222,15 +222,15 @@ class ScopusApiLib:
                     altrefid = alt_ref_list[alt_ref_idx]['@id']
                 if altrefid != current_reference_id:
                     notMatchAmt += 1
-                    if notMatchAmt > 5:
-                        raise Exception('Alt ref ID does not match ref id too many times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
-                else:
-                    alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
-                    if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
-                        title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
-                        if isinstance(title_txt, list):
-                            title_txt = str(title_txt[0])
-                        ref_dict['publicationName'] = title_txt
+                    if notMatchAmt > 15 and not refIDstatement:
+                        print('Double check this paper. Alt ref ID does not match ref id more than 15 times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
+                        refIDstatement = True
+                alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
+                if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
+                    title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
+                    if isinstance(title_txt, list):
+                        title_txt = str(title_txt[0])
+                    ref_dict['publicationName'] = title_txt
                 # if 'sourcetitle' in raw:
                 #     ref_dict['publisherName'] = raw['sourcetitle']
                 current_refs.append(ref_dict)
