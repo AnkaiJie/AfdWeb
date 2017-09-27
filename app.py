@@ -29,9 +29,9 @@ def send_overcites():
         run_overcite_script.delay(form['author_id'], int(form['paper_num']),
             int(form['cite_num']), form['name'], form['email'], indexed_name)
 
-        return render_template('finish.html') 
+        return render_template('finish.html')
     except KeyError:
-        return render_template('error.html') 
-    
+        return render_template('error.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
