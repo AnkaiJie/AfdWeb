@@ -4,9 +4,9 @@ import json
 import time
 import concurrent.futures
 import pymysql
-import time
 import datetime
 from datapython.sql import *
+import traceback
 
 class reqWrapper:
     def __init__(self, headers):
@@ -330,25 +330,48 @@ class DbInterface:
     def rangeExistsOrAdd(self):
         rangeTable = 'range_table_' + self.citing_sort
         cur = self.conn.cursor()
-        cur.execute("select last_run_date, max_paper_num as pnum, max_citing_num as cnum from %s where author_id='%s'" % (rangeTable, self.author_id))
+        cur.execute("select last_run_date, max_paper_num as pnum, max_citing_num as cnum, last_run_successful from %s where author_id='%s'" % (rangeTable, self.author_id))
         row = cur.fetchone()
         today = datetime.datetime.now()
         if row:
             last_date = row[0]
             pnum = row[1]
             cnum = row[2]
+            last_run_successful = row[3]
             date_diff = today - last_date
-            if pnum and cnum and int(self.paper_num) <= pnum and int(self.citing_num) <= cnum and date_diff.days < 365:
+
+            def rangeExists(last_run, pnum, cnum, days):
+                return (last_run_successful == 1 and pnum and cnum and int(self.paper_num) <= pnum
+                    and int(self.citing_num) <= cnum and date_diff.days < 365)
+
+            if rangeExists(last_run_successful, pnum, cnum, date_diff.days):
                 return True
 
-        toAdd = "('" + str(self.author_id) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + str(self.paper_num) + ", " + str(self.citing_num)  +")"
-        query = "insert into %s (author_id, last_run_date, max_paper_num, max_citing_num) \
-            values %s on duplicate key update author_id=values(author_id), last_run_date=values(last_run_date), \
-            max_paper_num=values(max_paper_num), max_citing_num=values(max_citing_num)" % (rangeTable, toAdd)
+        toAdd = "('" + str(self.author_id) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + \
+            str(self.paper_num) + ", " + str(self.citing_num) + ", 0)"
+        query = "insert into %s (author_id, last_run_date, max_paper_num, max_citing_num, \
+            last_run_successful) values %s on duplicate key update author_id=values(author_id), \
+            last_run_date=values(last_run_date), max_paper_num=values(max_paper_num), \
+            max_citing_num=values(max_citing_num), last_run_successful=values(last_run_successful)" % (rangeTable, toAdd)
         cur.execute(query)
         self.conn.commit()
         cur.close()
         return False
+
+    def rangeUpdateFailure(self, err_msg):
+        rangeTable = 'range_table_' + self.citing_sort
+        cur = self.conn.cursor()
+        query = "update %s set last_run_successful=0, \
+            last_error_msg='%s' where author_id='%s'" % (rangeTable, err_msg, self.author_id)
+        cur.execute(query)
+        self.conn.commit()
+
+    def rangeUpdateSuccess(self):
+        rangeTable = 'range_table_' + self.citing_sort
+        cur = self.conn.cursor()
+        query = "update %s set last_run_successful=1 where author_id='%s'" % (rangeTable, self.author_id)
+        cur.execute(query)
+        self.conn.commit()
 
 
     def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict):
@@ -483,47 +506,68 @@ class DbInterface:
 dbi = None
 sApi = ScopusApiLib()
 
-def storeAuthorTest(author_id):
-    print(author_id)
+def storeRequestInfo(auth_id, auth_name, pap_num, cite_num, requester_name, requester_email, req_ip, request_raw):
+    conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
+    cur = conn.cursor()
+
+    today = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    value_tuple = "('%s', '%s', '%s', %d, %d, '%s', '%s', '%s', \"%s\")" % (today, auth_id, auth_name, pap_num, 
+        cite_num, requester_name, requester_email, req_ip, request_raw)
+    query = 'insert into request_info_logs (req_date, author_id, author_name, paper_num, \
+        cite_num, requester_name, requester_email, requester_ip, request_raw) values %s' % value_tuple
+
+    cur.execute(query)
+    conn.commit()
+    cur.close()
+    conn.close()
 
 # this should be the only method that the client interacts with
 def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_lower", refCount=-1, workers=10):
-    author_profile = sApi.getAuthorMetrics(auth_id)
-    author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
-    dbi = DbInterface(author_identifier, citing_sort, pap_num, cite_num)
-    dbi.createTables()
+    try:    
+        author_profile = sApi.getAuthorMetrics(auth_id)
+        author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
+        dbi = DbInterface(author_identifier, citing_sort, pap_num, cite_num)
+        dbi.createTables()
 
-    already = dbi.rangeExistsOrAdd()
-    if (already):
-        print("Range exists, skipping s1/s2")
-    else:
-        # Puts the main author record
-        print('Beginning processing of S1 table for : ' + str(auth_id))
-        
-        # Puts the authors papers
-        print('Getting author papers')
-        papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
+        already = dbi.rangeExistsOrAdd()
+
+        if (already):
+            print("Range exists, skipping s1/s2")
+        else:
+            print("Range doesn't exist or there was previous failure. Beginning.")
+            # Puts the main author record
+            print('Beginning processing of S1 table for : ' + str(auth_id))
+            
+            # Puts the authors papers
+            print('Getting author papers')
+            papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
 
-        executor = concurrent.futures.ProcessPoolExecutor(workers)
-        paper_counter = 1
-        processes = []
-        for paper_arr in grouper(1, papers):
-            processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, cite_num, citing_sort, refCount))
-            paper_counter += len(paper_arr)
+            executor = concurrent.futures.ProcessPoolExecutor(workers)
+            paper_counter = 1
+            processes = []
+            for paper_arr in grouper(1, papers):
+                processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, cite_num, citing_sort, refCount))
+                paper_counter += len(paper_arr)
 
-        # processes = [executor.submit(processPaperMain, author_identifier, paper_arr, pap_num, cite_num, citing_sort, refCount)
-        #     for paper_arr in grouper(1, papers)]
-        for p in processes:
-            p.result()
+            # processes = [executor.submit(processPaperMain, author_identifier, paper_arr, pap_num, cite_num, citing_sort, refCount)
+            #     for paper_arr in grouper(1, papers)]
+            for p in processes:
+                p.result()
 
-        print('Beginning processing of s2 table.')
-        dbi.processS2()
+            print('Beginning processing of s2 table.')
+            dbi.processS2()
 
-    print('Beginning processing of overcite table.')
-    table_names = dbi.processOvercites()
-    print('Done.')
-    return table_names
+        print('Beginning processing of overcite table.')
+        table_names = dbi.processOvercites()
+        print('Done. Updating success code..')
+        dbi.rangeUpdateSuccess()
+        return table_names
+    except Exception:
+        traceback.print_exc()
+        err_msg = traceback.format_exc()
+        dbi.rangeUpdateFailure(err_msg)
+        return None
 
 
 def grouper(lengths, arr):
@@ -537,7 +581,6 @@ def grouper(lengths, arr):
     return arrarr
 
 def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing_sort, refCount):
-
     for eid in papers:
         print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
         #main_title = self.storePapersOnly(eid)
@@ -550,7 +593,6 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing
         if thisPaperDict is None:
             print("NONE MAIN PAPER")
             continue
-
 
         #Puts the citing papers of the authors papers, and those respective authors
         print('Handling citing papers...')
