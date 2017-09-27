@@ -120,6 +120,4 @@ def run_overcite_script(author_id, pnum, cnum, name, email, author_name):
 
 @capp.task
 def store_request(author_id, pnum, cnum, name, email, author_name, req_ip, request_raw):
-    print("WE HERE")
     storeRequestInfo(author_id, author_name, pnum, cnum, name, email, req_ip, request_raw)
-
