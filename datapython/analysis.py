@@ -1,8 +1,3 @@
-import os
-import matplotlib as mpl
-# for environments with no display
-if os.environ.get('DISPLAY','') == '':
-    mpl.use('Agg')
 from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import operator
 import pymysql
@@ -24,8 +19,13 @@ class Analysis:
         self.citing_sort = citing_sort
 
     def getAuthorName(self, id):
+        authname = 'Unknown'
         details = self.api.getAuthorMetrics(id)
-        return details['given-name'] + " " + details['surname']
+        if 'given-name' in details and 'surname' in details:
+            authname = details['given-name'] + " " + details['surname']
+        elif 'indexed-name' in author_info:
+            authname = author_info['indexed-name']
+        return authname
 
     def getOvercites(self, authid):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
@@ -108,13 +108,14 @@ class Analysis:
         df = self.getOvercites(authid)
         name = 'datapython/graphs/Influence_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
-        writer.writerow(['Target Author', 'Target Author Name', 'Citing Paper',
-            'Citing Paper Title', 'Citing Paper Authors', 'Number of Authors', 'Citation Count'])
+
+        writer.writerow(['Target Author Id: '  + authid])
+        writer.writerow(['Target Author Name: ' + authname])
+        writer.writerow([])
+
+        writer.writerow(['Citing Paper', 'Citing Paper Title', 'Citing Paper Authors', 'Citation Count'])
 
         author_info = self.api.getAuthorMetrics(authid)
-        authname = 'Unknown'
-        if 'indexed-name' in author_info:
-            authname = author_info['indexed-name']
 
         for idx, row in df.iterrows():
             src_paper_eid = row['Citing Paper']
@@ -131,45 +132,8 @@ class Analysis:
 
             paper_authors = ','.join(paper_author_arr)
 
-            targ, cite, authcount, overcites = row['Target Author'], row['Citing Paper'], row['Author Count'],row['Overcites']
-            writer.writerow([targ, authname, cite, paper_title, paper_authors, authcount, overcites])
+            cite, overcites = row['Citing Paper'],row['Overcites']
+            writer.writerow([cite, paper_title, paper_authors, overcites])
 
         return name
 
-
-
-# plotOvercitesBar('22954842600')
-# plotOvercitesHist('22954842600')
-# s = ScopusApiLib()
-# print(s.getAuthorPapers('22954842600'))
-# print (s.getAuthorMetrics('22954842600'))
-
-# a = Analysis()
-# print(a.overcitesCsv('22954842600'))
-# a.plotOvercitesBar('22954842600', 'Athanasios Vasilakos', True)
-# a.plotOvercitesBar('7004058432', 'Tarek Abdelzaher', True)
-# a.plotOvercitesBar('7006637893', 'David Haussler', True)
-# a.plotOvercitesBar('20734105100', 'Ian Horrocks', True)
-# a.plotOvercitesBar('10141917500', 'Srinivasan Keshav', True)
-# a.plotOvercitesBar('55666697100', 'Khaled Letaief', True)
-# a.plotOvercitesBar('7006811415', 'Michael Lyu', True)
-# a.plotOvercitesBar('55251517100', 'Burkhard Ross', True)
-# a.plotOvercitesBar('7004449411', 'Thomas Henzinger', True)
-# a.plotOvercitesBar('7007153024', 'Wil Vanderaalst', True)
-# a.plotOvercitesBar('35618760400', 'Ronald Yager', True)
-
-# a.plotOvercitesHist('22954842600', 'Athanasios Vasilakos', True)
-# a.plotOvercitesHist('7004058432', 'Tarek Abdelzaher', True)
-# a.plotOvercitesHist('7006637893', 'David Haussler', True)
-# a.plotOvercitesHist('20734105100', 'Ian Horrocks', True)
-# a.plotOvercitesHist('10141917500', 'Srinivasan Keshav', True)
-# a.plotOvercitesHist('55666697100', 'Khaled Letaief', True)
-# a.plotOvercitesHist('7006811415', 'Michael Lyu', True)
-# a.plotOvercitesHist('55251517100', 'Burkhard Ross', True)
-# a.plotOvercitesHist('7004449411', 'Thomas Henzinger', True)
-# a.plotOvercitesHist('7007153024', 'Wil Vanderaalst', True)
-# a.plotOvercitesHist('35618760400', 'Ronald Yager', True)
-
-
-
-# a.plotOvercitesHist('22954842600')
