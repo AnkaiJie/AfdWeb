@@ -19,8 +19,13 @@ class Analysis:
         self.citing_sort = citing_sort
 
     def getAuthorName(self, id):
+        authname = 'Unknown'
         details = self.api.getAuthorMetrics(id)
-        return details['given-name'] + " " + details['surname']
+        if 'given-name' in details and 'surname' in details:
+            authname = details['given-name'] + " " + details['surname']
+        elif 'indexed-name' in author_info:
+            authname = author_info['indexed-name']
+        return authname
 
     def getOvercites(self, authid):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
@@ -103,13 +108,14 @@ class Analysis:
         df = self.getOvercites(authid)
         name = 'datapython/graphs/Influence_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
-        writer.writerow(['Target Author', 'Target Author Name', 'Citing Paper',
-            'Citing Paper Title', 'Citing Paper Authors', 'Number of Authors', 'Citation Count'])
+
+        writer.writerow(['Target Author Id: '  + authid])
+        writer.writerow(['Target Author Name: ' + authname])
+        writer.writerow([])
+
+        writer.writerow(['Citing Paper', 'Citing Paper Title', 'Citing Paper Authors', 'Citation Count'])
 
         author_info = self.api.getAuthorMetrics(authid)
-        authname = 'Unknown'
-        if 'indexed-name' in author_info:
-            authname = author_info['indexed-name']
 
         for idx, row in df.iterrows():
             src_paper_eid = row['Citing Paper']
@@ -126,8 +132,8 @@ class Analysis:
 
             paper_authors = ','.join(paper_author_arr)
 
-            targ, cite, authcount, overcites = row['Target Author'], row['Citing Paper'], row['Author Count'],row['Overcites']
-            writer.writerow([targ, authname, cite, paper_title, paper_authors, authcount, overcites])
+            cite, overcites = row['Citing Paper'],row['Overcites']
+            writer.writerow([cite, paper_title, paper_authors, overcites])
 
         return name
 

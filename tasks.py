@@ -81,10 +81,12 @@ def analyze(author_id, name, email, table_names_bylast, table_names_byfront, aut
 
     to_zip += ['datapython/graphs/README.pdf']
 
-    zipath = 'datapython/graphs/' + author_id + '_overcitedata.zip'
+    name_process = author_name.split()[0].lower().replace('.','').replace(',','').strip()
+    zipath = 'datapython/graphs/' + author_id + '_' + name_process +  '_influencedata.zip'
     with ZipFile(zipath, 'w') as myzip:
         for path in to_zip:
-            myzip.write(path)
+            filename = path.split('/')[-1]
+            myzip.write(path, filename)
 
     send_email_success(author_id, name, email, zipath, author_name)
 
@@ -115,6 +117,7 @@ def run_overcite_script(author_id, pnum, cnum, name, email, author_name):
     try:
         analyze(author_id, name, email, table_names_bylast, table_names_byfront, author_name)
     except Exception:
+        print(traceback.format_exc())
         send_email_failure(author_id, name, email, author_name, pnum, cnum,
             where='analyze script, with exception: ' + traceback.format_exc())
 
