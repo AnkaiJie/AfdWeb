@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
 import operator
 import pymysql
