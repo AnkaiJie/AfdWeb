@@ -599,7 +599,7 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing
 
         ccount = 1
         for citeIdx, citing in enumerate(citedbys):
-            print('Citing paper index number: ' + str(ccount))
+            print('Paper %d. Citing Paper %d. EIDs: %s, %s' % (paper_counter, citeIdx, eid, citing))
             citePaperDict = sApi.getPaperInfo(citing)
             if citePaperDict is None:
                 print("NONE CITING PAPER")
