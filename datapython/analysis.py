@@ -52,12 +52,12 @@ class Analysis:
         ax.set_xticks(x_pos)
         ax.set_ylim([0, np.amax(overs) + 1])
         ax.set_xticklabels(papers, rotation="90")
-        ax.set_ylabel('Overcites')
+        ax.set_ylabel('Number of Citations to ' + authname)
         ax.set_xlabel('Citing Paper ID')
         num = 25
         if (len(papers) < 25):
             num = len(papers)
-        ax.set_title('Influence Bar Graph: Top ' + str(num) + ' overciting papers for author ' + authname + '\n from ' + str(len(df)) + ' citing papers')
+        ax.set_title('Influence Bar Graph: Top ' + str(num) + ' influenced papers for author ' + authname + '\n from ' + str(len(df)) + ' citing papers')
         savename = 'datapython/graphs/Bar_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
         if save:
             fig.savefig(savename)
@@ -90,9 +90,9 @@ class Analysis:
         ax.set_xticklabels(overcite_nums, rotation="90")
         if len(overcite_num_freqs) > 0:
             ax.set_ylim([0, np.amax(overcite_num_freqs) + 1])
-        ax.set_ylabel('Number of Papers with Overcite Amount')
-        ax.set_xlabel('Number of Overcites')
-        ax.set_title('Influence Histogram: citation frequency for papers with >=' + str(threshold) + ' overcites \n from ' + str(len(df)) + ' citing papers for ' + authname)
+        ax.set_ylabel('Number of Papers')
+        ax.set_xlabel('Citation Count to ' + authname)
+        ax.set_title('Influence Histogram: Number of Papers With >=' + str(threshold) + ' Influence Threshold\n from ' + str(len(df)) + ' citing papers for ' + authname)
         savename = 'datapython/graphs/Hist_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
         if save:
             fig.savefig(savename)
