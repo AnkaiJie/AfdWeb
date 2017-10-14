@@ -171,11 +171,10 @@ class ScopusApiLib:
 
         # For some stupid reason, Scopus API changed their reference paper title field to only give the publisher name
         # So now we have to get paper names from a separate api response
-        alternate_ref_info = self.getPaperInfo(eid, reference=True)
-        alt_ref_list = alternate_ref_info['reference']
-        
-        notMatchAmt = 0
-        refIDstatement = False
+        # alternate_ref_info = self.getPaperInfo(eid, reference=True)
+        # alt_ref_list = alternate_ref_info['reference']
+        # notMatchAmt = 0
+        # refIDstatement = False
         while(True):
             time.sleep(0.2)
             resp = self.reqs.getJson(req_url)
@@ -204,7 +203,7 @@ class ScopusApiLib:
             for idx, raw in enumerate(resp_body):
 
                 ref_dict = {}
-                current_reference_id = raw['@id']
+                # current_reference_id = raw['@id']
                 ref_dict['authors'] = None
                 if raw['author-list'] and raw['author-list']['author']:
                     auth_list = raw['author-list']['author']
@@ -214,25 +213,29 @@ class ScopusApiLib:
                 #ref_dict['srceid'] = eid
                 ref_dict['eid'] = raw['scopus-eid']
 
-                alt_ref_idx = idx + start - 1
-                altrefid = current_reference_id
+                # alt_ref_idx = idx + start - 1
+                # altrefid = current_reference_id
                 # Sometimes alt list is missing id field.
                 # In that case we will assume ordering is correct at risk of getting the wrong title
-                if '@id' in alt_ref_list[alt_ref_idx]:
-                    altrefid = alt_ref_list[alt_ref_idx]['@id']
-                if altrefid != current_reference_id:
-                    notMatchAmt += 1
-                    if notMatchAmt > 15 and not refIDstatement:
-                        print('Double check this paper. Alt ref ID does not match ref id more than 15 times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
-                        refIDstatement = True
-                alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
-                if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
-                    title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
-                    if isinstance(title_txt, list):
-                        title_txt = str(title_txt[0])
-                    ref_dict['publicationName'] = title_txt
-                # if 'sourcetitle' in raw:
-                #     ref_dict['publisherName'] = raw['sourcetitle']
+                # try:
+                #     if '@id' in alt_ref_list[alt_ref_idx]:
+                #         altrefid = alt_ref_list[alt_ref_idx]['@id']
+                # except:
+                #     print(alt_ref_list)
+                #     raise
+                # if altrefid != current_reference_id:
+                #     notMatchAmt += 1
+                #     if notMatchAmt > 15 and not refIDstatement:
+                #         print('Double check this paper. Alt ref ID does not match ref id more than 15 times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
+                #         refIDstatement = True
+                # alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
+                # if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
+                #     title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
+                #     if isinstance(title_txt, list):
+                #         title_txt = str(title_txt[0])
+                #     ref_dict['publicationName'] = title_txt
+                if 'sourcetitle' in raw:
+                    ref_dict['publicationName'] = raw['sourcetitle']
                 current_refs.append(ref_dict)
 
             ref_arr += current_refs
@@ -522,7 +525,7 @@ def storeRequestInfo(auth_id, auth_name, pap_num, cite_num, requester_name, requ
     conn.close()
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_lower", refCount=-1, workers=10):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_lower", refCount=-1, workers=10, test=False):
     try:    
         author_profile = sApi.getAuthorMetrics(auth_id)
         author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
@@ -531,7 +534,7 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort
 
         already = dbi.rangeExistsOrAdd()
 
-        if (already):
+        if (already and not test):
             print("Range exists, skipping s1/s2")
         else:
             print("Range doesn't exist or there was previous failure. Beginning.")
@@ -550,8 +553,6 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort
                 processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, cite_num, citing_sort, refCount))
                 paper_counter += len(paper_arr)
 
-            # processes = [executor.submit(processPaperMain, author_identifier, paper_arr, pap_num, cite_num, citing_sort, refCount)
-            #     for paper_arr in grouper(1, papers)]
             for p in processes:
                 p.result()
 
@@ -599,11 +600,12 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing
 
         ccount = 1
         for citeIdx, citing in enumerate(citedbys):
-            print('Citing paper index number: ' + str(ccount))
+            print('Paper %d. Citing Paper %d. EIDs: %s, %s' % (paper_counter, citeIdx, eid, citing))
             citePaperDict = sApi.getPaperInfo(citing)
             if citePaperDict is None:
                 print("NONE CITING PAPER")
                 continue
+
             storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, cite_num,
                 paper_counter, citeIdx + 1, author_id, citing_sort)
             storePaperReferences(citing, dict(citePaperDict), pap_num, cite_num,
@@ -635,14 +637,17 @@ def storePaperReferences(eid, srcPaperDict, pap_num, cite_num, papIdx, citeIdx, 
     #   from a subset, such as top 10 papers, and top 20 citing papers
     record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
 
+    scopus_author_id = author_id.split('_')[0]
     for targPaperDict in references:
         targAuthors = [{'indexed_name': None}]
         if 'authors' in targPaperDict and targPaperDict['authors'] is not None:
             targAuthors = targPaperDict.pop('authors')
 
-        for srcAuth in srcAuthors:
-            for targAuth in targAuthors:
-                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
+        for targAuth in targAuthors:
+            # print(targAuth)
+            if 'dc:identifier' in targAuth and targAuth['dc:identifier'][10:] == str(scopus_author_id):
+                for srcAuth in srcAuthors:
+                    dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
 
 def storeCiting(srcPaperDict, targPaperDict, pap_num, cite_num, papIdx, citeIdx, author_id, citing_sort):
     dbi = DbInterface(author_id, citing_sort, pap_num, cite_num)
@@ -655,9 +660,11 @@ def storeCiting(srcPaperDict, targPaperDict, pap_num, cite_num, papIdx, citeIdx,
 
     record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
 
-    for srcAuth in srcAuthors:
-        for targAuth in targAuthors:
-            dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
+    scopus_author_id = author_id.split('_')[0]
+    for targAuth in targAuthors:
+        if 'dc:identifier' in targAuth and targAuth['dc:identifier'][10:] == str(scopus_author_id):
+            for srcAuth in srcAuthors:
+                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
 
 
 # def storeToStage1(self, srcpapid, targpapid):
