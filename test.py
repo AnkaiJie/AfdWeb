@@ -1,5 +1,5 @@
 import traceback
-# from datapython.apilib import ScopusApiLib, DbInterface
+from datapython.apilib import ScopusApiLib, DbInterface, storeAuthorMain
 
 # # # For running tests
 # # dbi = DbInterface('ankaijie', 'citations_lower', 1,1)
@@ -26,11 +26,9 @@ import traceback
 
 # print(sal.prettifyJson(ref))
 
-try:
-	print ('no error')
-except Exception as e:
-	traceback.print_exc()
 
 
+table_names_bylast = storeAuthorMain(35748826000, start_index=0, pap_num=3, cite_num=3,
+        citing_sort="citations_lower", workers=10, test=True)
 
-
+print(table_names_bylast)
