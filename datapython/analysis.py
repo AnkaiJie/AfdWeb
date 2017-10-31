@@ -23,8 +23,8 @@ class Analysis:
         details = self.api.getAuthorMetrics(id)
         if 'given-name' in details and 'surname' in details:
             authname = details['given-name'] + " " + details['surname']
-        elif 'indexed-name' in author_info:
-            authname = author_info['indexed-name']
+        elif 'indexed-name' in details:
+            authname = details['indexed-name']
         return authname
 
     def getOvercites(self, authid):
@@ -114,8 +114,6 @@ class Analysis:
         writer.writerow([])
 
         writer.writerow(['Citing Paper', 'Citing Paper Title', 'Citing Paper Authors', 'Citation Count'])
-
-        author_info = self.api.getAuthorMetrics(authid)
 
         for idx, row in df.iterrows():
             src_paper_eid = row['Citing Paper']
