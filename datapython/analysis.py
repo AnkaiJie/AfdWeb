@@ -14,8 +14,9 @@ class Analysis:
 
     def __init__(self, authid, table_names):
         self.api = ScopusApiLib()
-        self.authname = self.getAuthorName(authid)
-        self.authid = authid
+        # self.authname = self.getAuthorName(authid)
+        self.authname = 'kanknknka nknkna '
+        self.authid = str(authid)
         self.table_names = table_names
 
     def getAuthorName(self, id):
@@ -55,8 +56,8 @@ class Analysis:
         citations = df['Citations to Target Author']
 
         ax.scatter(citedbys, citations, c='r')
-        ax.set_xlim([-1, maxCitedby])
-        ax.set_xticks(x_pos)
+        ax.set_xlim([-1, maxCitedby + 5])
+        ax.set_xticks(np.arange(0, maxCitedby, 20))
         ax.set_ylim([0, maxOvers + 1])
         ax.set_ylabel('Number of Citations to ' + authname)
         ax.set_xlabel('Number of Times Citing Paper is Cited')
@@ -64,7 +65,7 @@ class Analysis:
         ax.set_title('Influence Scatter Plot: Degree of Influence from' + authname + ' \
             vs Degree of Popularity of Paper out of' + str(len(df)) + ' Citing Papers')
 
-        savename = 'datapython/graphs/Scatter_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
+        savename = 'datapython/graphs/Scatter_' + '_'.join(authname.split()) + '.png'
         if save:
             fig.savefig(savename)
         else:
@@ -73,99 +74,36 @@ class Analysis:
         return savename
 
 
-    def plotOvercitesBar(self, authid, save=True):
-        df = self.getOvercites(authid)
-        fig, ax = plt.subplots(figsize=(10,10))
-        fig.subplots_adjust(bottom=0.25)
-        authname = self.authname 
-        papers = df['Citing Paper'][:25]
-        x_pos = np.arange(len(papers))
-        overs = df['Overcites'][:25]
-        ax.bar(x_pos, overs, align='center')
-        ax.set_xlim([-1, x_pos.size])
-        ax.set_xticks(x_pos)
-        ax.set_ylim([0, np.amax(overs) + 1])
-        ax.set_xticklabels(papers, rotation="90")
-        ax.set_ylabel('Number of Citations to ' + authname)
-        ax.set_xlabel('Citing Paper ID')
-        num = 25
-        if (len(papers) < 25):
-            num = len(papers)
-        ax.set_title('Influence Bar Graph: Top ' + str(num) + ' influenced papers for author ' + authname + '\n from ' + str(len(df)) + ' citing papers')
-        savename = 'datapython/graphs/Bar_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
-        if save:
-            fig.savefig(savename)
-        else:
-            plt.show()
-
-        return savename
-
-    def plotOvercitesHist(self, authid, save=True, threshold =10):
-        authname = self.authname 
-        df = self.getOvercites(authid)
-        fig,ax = plt.subplots(figsize=(10,10))
-        fig.subplots_adjust(bottom=0.25)
-
-        freq = {}
-        for idx, row in df.iterrows():
-            overs = row['Overcites']
-            if overs > threshold-1:
-                f = freq.get(overs, 0)
-                freq[overs] = f + 1
-
-        sorted_freq = sorted(freq.items(), key=operator.itemgetter(0))
-        x_pos = np.arange(len(sorted_freq))
-        overcite_nums = [x[0] for x in sorted_freq]
-        overcite_num_freqs = [x[1] for x in sorted_freq]
-
-        ax.bar(x_pos, overcite_num_freqs, align='center')
-        ax.set_xlim([-1, x_pos.size])
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(overcite_nums, rotation="90")
-        if len(overcite_num_freqs) > 0:
-            ax.set_ylim([0, np.amax(overcite_num_freqs) + 1])
-        ax.set_ylabel('Number of Papers')
-        ax.set_xlabel('Citation Count to ' + authname)
-        ax.set_title('Influence Histogram: Number of Papers With >=' + str(threshold) + ' Influence Threshold\n from ' + str(len(df)) + ' citing papers for ' + authname)
-        savename = 'datapython/graphs/Hist_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
-        if save:
-            fig.savefig(savename)
-        elif save:
-            fig.savefig(savename + ".png")
-        else:
-            plt.show()
-
-        return savename
-
-    def overcitesCsv(self, authid):
-        authname = self.authname
-        df = self.getOvercites(authid)
-        name = 'datapython/graphs/Influence_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
+    def overcitesCsv(self):
+        df = self.getOvercites()
+        name = 'datapython/graphs/Influence_' + '_'.join(self.authname.split()) + '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
 
-        writer.writerow(['Target Author Id: '  + authid])
-        writer.writerow(['Target Author Name: ' + authname])
+        writer.writerow(['Target Author Id: '  + self.authid])
+        writer.writerow(['Target Author Name: ' + self.authname])
         writer.writerow([])
 
-        writer.writerow(['Citing Paper', 'Citing Paper Title', 'Citing Paper Authors', 'Citation Count'])
+        writer.writerow(['Citing Paper EID', 'Citing Paper Title', 'Citing Paper Cited By Count', 'Citation Count'])
 
         for idx, row in df.iterrows():
-            src_paper_eid = row['Citing Paper']
-            paper_info = self.api.getPaperInfo(src_paper_eid)
-            paper_title = "Unknown"
-            if 'title' in paper_info:
-                paper_title = paper_info['title']
+            # src_paper_eid = row['Citing Paper']
+            # paper_info = self.api.getPaperInfo(src_paper_eid)
+            # paper_title = "Unknown"
+            # if 'title' in paper_info:
+            #     paper_title = paper_info['title']
 
-            paper_author_arr = []
-            if 'authors' in paper_info:
-                for auth in paper_info['authors']:
-                    if 'indexed-name' in auth:
-                        paper_author_arr.append(auth['indexed-name'].strip('.'))
+            # paper_author_arr = []
+            # if 'authors' in paper_info:
+            #     for auth in paper_info['authors']:
+            #         if 'indexed-name' in auth:
+            #             paper_author_arr.append(auth['indexed-name'].strip('.'))
 
-            paper_authors = ','.join(paper_author_arr)
+            # paper_authors = ','.join(paper_author_arr)
 
-            cite, overcites = row['Citing Paper'],row['Overcites']
-            writer.writerow([cite, paper_title, paper_authors, overcites])
+            cite, title, citedby, overcites = row['Citing Paper EID'], row['Citing Paper Title'], \
+                row['Citing Paper Cited By Count'], row['Citations to Target Author']
+
+            writer.writerow([cite, title, citedby, overcites])
 
         return name
 
