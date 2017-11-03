@@ -12,11 +12,11 @@ plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid, table_names, citing_sort):
+    def __init__(self, authid, table_names):
         self.api = ScopusApiLib()
         self.authname = self.getAuthorName(authid)
+        self.authid = authid
         self.table_names = table_names
-        self.citing_sort = citing_sort
 
     def getAuthorName(self, id):
         authname = 'Unknown'
@@ -27,16 +27,50 @@ class Analysis:
             authname = details['indexed-name']
         return authname
 
-    def getOvercites(self, authid):
+    def getOvercites(self):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
-        cmd = "select * from " + self.table_names['overcite'] + " where targ_author_id=" + "'" + authid + "'" + " order by overcites desc"
+        cmd = "select * from " + self.table_names['overcite'] + " where \
+        targ_author_id=" + "'" + self.authid + "'" + " order by src_paper_citedby_count"
 
         curs.execute(cmd)
         rows = curs.fetchall()
         df = pd.DataFrame([i for i in rows])
-        df.rename(columns={0: 'Target Author', 1: 'Citing Paper', 2:'Author Count', 3:'Overcites'}, inplace=True)
+        df.rename(columns={0: 'Target Author', 1: 'Citing Paper EID', \
+            2:'Citing Paper Title', 3:'Citing Paper Cited By Count', 4:'Citations to Target Author'}, inplace=True)
         return df
+
+
+    def plotOvercitesScatter(self, save=True):
+        df = self.getOvercites()
+        fig, ax = plt.subplots(figsize=(10,10))
+        fig.subplots_adjust(bottom=0.25)
+        authname = self.authname
+
+        maxCitedby = max(df['Citing Paper Cited By Count'])
+        maxOvers = max(df['Citations to Target Author'])
+        x_pos = np.arange(maxCitedby)
+
+        citedbys = df['Citing Paper Cited By Count']
+        citations = df['Citations to Target Author']
+
+        ax.scatter(citedbys, citations, c='r')
+        ax.set_xlim([-1, maxCitedby])
+        ax.set_xticks(x_pos)
+        ax.set_ylim([0, maxOvers + 1])
+        ax.set_ylabel('Number of Citations to ' + authname)
+        ax.set_xlabel('Number of Times Citing Paper is Cited')
+
+        ax.set_title('Influence Scatter Plot: Degree of Influence from' + authname + ' \
+            vs Degree of Popularity of Paper out of' + str(len(df)) + ' Citing Papers')
+
+        savename = 'datapython/graphs/Scatter_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
+        if save:
+            fig.savefig(savename)
+        else:
+            plt.show()
+
+        return savename
 
 
     def plotOvercitesBar(self, authid, save=True):

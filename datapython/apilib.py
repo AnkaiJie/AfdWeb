@@ -1,368 +1,57 @@
-from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
-import requests
-import json
-import time
+from datapython.credentials import DBNAME, USER, PASSWORD, HOST
+from datapython.ScopusApiLib import ScopusApiLib
 import concurrent.futures
 import pymysql
 import datetime
 from datapython.sql import *
 import traceback
-
-class reqWrapper:
-    def __init__(self, headers):
-         self.sesh = requests.session()
-         self.headers = headers
-
-    def get(self, url):
-        return self.sesh.get(url, headers=self.headers)
-
-    def getJson(self, url):
-        return self.sesh.get(url, headers=self.headers).json()
-
-    def getJsonPretty(self, url):
-        resp = self.sesh.get(url, headers=self.headers)
-        return json.dumps(resp.json(), sort_keys=True, indent=4, separators=(',', ': '))
-
-    def prettifyJson(self, jsonObj):
-        return json.dumps(jsonObj, sort_keys=True, indent=4, separators=(',', ': '))
-
-# this class returns flattened dictionaries of api keys
-# it does some filtering and flattening of returned json, but doesn ot directly modify
-class ScopusApiLib:
-
-    def __init__(self):
-        headers={'Accept':'application/json', 'X-ELS-APIKey': API_KEY}
-        self.reqs = reqWrapper(headers)
-        self.utility = Utility()
-
-    # returns basic info about a given author
-    def getAuthorMetrics(self, auth_id):
-        url = "http://api.elsevier.com/content/author?author_id=" + str(auth_id)
-        resp = self.reqs.getJson(url)
-        # print(resp)
-        resp = resp['author-retrieval-response'][0]
-
-        pfields = ['preferred-name', 'publication-range']
-        cfields = ['citation-count', 'cited-by-count', 'dc:identifier', 'document-count', 'eid']
-        profile = self.utility.filter(resp['author-profile'], pfields)
-        coredata = self.utility.filter(resp['coredata'], cfields)
-        profile.update(coredata)
-        profile = self.utility.flattenDict(profile)
-        keys = list(profile.keys())
-        for k in keys:
-            if 'preferred-name' in k:
-                profile[k.split('_')[1]] = profile.pop(k)
-        if 'given-name' in profile and profile['given-name'] is not None:
-            profile['given-name'] = self.processFirstName(profile['given-name'])
-        if 'dc:identifier' in profile and profile['dc:identifier']:
-            profile['dc:identifier'] = profile['dc:identifier'].split(':')[1].strip()
-        return profile
-
-    #returns array of author papers eids
-    def getAuthorPapers(self, auth_id, start=0, num=100):
-        auth_id = str(auth_id)
-        if 'AUTHOR_ID' in auth_id:
-            auth_id = auth_id.split(':')[1]
-
-        #cited by order
-        url = "http://api.elsevier.com/content/search/scopus?query=AU-ID(" + auth_id + ")&field=eid&sort=citedby-count&start=" + \
-            str(start) + "&count=" + str(num)
-        if start is not 0:
-            url += "&start=" + str(start) + "&num=" + str(num)
-        results = self.reqs.getJson(url)['search-results']["entry"]
-        eid_arr = []
-        for pdict in results:
-            eid_arr.append(pdict['eid'])
-        return eid_arr
-
-    # returns an array of papers that cite the paper with the given eid    
-    def getCitingPapers(self, eid, num=100, sort_order="date"):
-        #eid = '2-s2.0-79956094375'
-        url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&count=' + str(num)
-        if sort_order == "citations_lower":
-            url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=+citedby-count&count=' + str(num)
-        elif sort_order == "citations_upper":
-            url ='https://api.elsevier.com/content/search/scopus?query=refeid(' + str(eid) + ')&field=eid&start=0&sort=-citedby-count&count=' + str(num)
-        resp = self.reqs.getJson(url)
-
-        resp = resp['search-results']['entry']
-        if 'error' in resp[0] and resp[0]['error'] == 'Result set was empty':
-            return []
-        # print(resp)
-        paps = [pap['eid'] for pap in resp]
-        return paps
-
-    #returns basic info about a paper with the given eid
-    def getPaperInfo(self, eid, reference=False):
-        url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid) + '?&field=authors,coverDate,eid,title,publicationName'
-        if reference:
-            url = url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid)
-        resp = self.reqs.getJson(url)
-        # print(self.prettifyJsonif(resp))
-        try:
-            if 'service-error' in resp:
-                resp = self.reqs.getJson(url)
-                if 'service-error' in resp:
-                    print("SERVICE ERROR Citing")
-                    raise
-            resp = resp['abstracts-retrieval-response']
-        except:
-            print(resp)
-            print(url)
-            raise
-
-        if reference:
-            # print(self.prettifyJson(resp))
-            ref_data = resp['item']['bibrecord']['tail']['bibliography']
-            return ref_data
-        else:
-            coredata = resp['coredata']
-            if resp['authors']:
-                authors = resp['authors']['author']
-                auinfos = self.processAuthorList(authors)
-                coredata['authors'] = auinfos
-            coredata = self.utility.removePrefix(coredata)
-            return coredata
-
-    def processFirstName(self, name):
-        return name.split()[0].strip()
-
-    def processAuthorList(self, arr):
-        auids = []
-        for a in arr:
-            if '@auid' in a and a['@auid'] != '':
-                res = self.utility.filter(a, ['@auid', 'ce:indexed-name', 'ce:initials', 'ce:surname', 'ce:given-name'])
-                res = self.utility.removePrefix(res)
-                self.utility.replaceKey(res, '@auid', 'dc:identifier')
-                res['dc:identifier'] = 'AUTHOR_ID:' + res['dc:identifier']
-                auids.append(res)
-            else: 
-                #no scopus id, just use name as id
-                res = self.utility.filter(a, ['ce:indexed-name', 'ce:initials', 'ce:surname', 'ce:given-name'])
-                res = self.utility.removePrefix(res)
-
-                newid = 'AUTHOR_ID:'
-                id_arr = []
-                if 'initials' in res:
-                    id_arr.append(res['initials'])
-                if 'surname' in res:
-                    id_arr.append(res['surname'])
-
-                newid += '_'.join(id_arr)
-                res['dc:identifier'] = newid
-
-                auids.append(res)
-        return auids
-
-    # returns an array of papers that the paper with the given eid cites
-    def getPaperReferences(self, eid, refCount = -1):
-        url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid) + '?&view=REF'
-        req_url = url
-        start = 1
-        custom_count = False
-        if refCount is not -1:
-            req_url += '&refcount=' + str(refCount)
-            custom_count = True
-        else:
-            req_url += '&startref='+ str(start)
-        
-        ref_arr = []
-        i = 0
-
-        # For some stupid reason, Scopus API changed their reference paper title field to only give the publisher name
-        # So now we have to get paper names from a separate api response
-        # alternate_ref_info = self.getPaperInfo(eid, reference=True)
-        # alt_ref_list = alternate_ref_info['reference']
-        # notMatchAmt = 0
-        # refIDstatement = False
-        while(True):
-            time.sleep(0.2)
-            resp = self.reqs.getJson(req_url)
-            resp_body = {}
-            try:
-                resp_body = resp['abstracts-retrieval-response']
-            except Exception as e:
-                if 'service-error' in resp and resp['service-error']['status']['statusText'] == "'startref' or 'refcount' parameter missing or invalid":
-                    break
-                else:
-                    time.sleep(2)
-                    resp = self.reqs.getJson(url)
-                    if 'service-error' in resp:
-                        print("SERVICE ERROR References")
-                        print(url)
-                        print(resp)
-                        raise
-                    else:
-                        resp_body = resp['abstracts-retrieval-response']
-
-            if resp_body is None:
-                return None
-            else:
-                resp_body = resp_body['references']['reference']
-            current_refs = []
-            for idx, raw in enumerate(resp_body):
-
-                ref_dict = {}
-                # current_reference_id = raw['@id']
-                ref_dict['authors'] = None
-                if raw['author-list'] and raw['author-list']['author']:
-                    auth_list = raw['author-list']['author']
-                    auids = self.processAuthorList(auth_list)
-                    ref_dict['authors'] = auids
-
-                #ref_dict['srceid'] = eid
-                ref_dict['eid'] = raw['scopus-eid']
-
-                # alt_ref_idx = idx + start - 1
-                # altrefid = current_reference_id
-                # Sometimes alt list is missing id field.
-                # In that case we will assume ordering is correct at risk of getting the wrong title
-                # try:
-                #     if '@id' in alt_ref_list[alt_ref_idx]:
-                #         altrefid = alt_ref_list[alt_ref_idx]['@id']
-                # except:
-                #     print(alt_ref_list)
-                #     raise
-                # if altrefid != current_reference_id:
-                #     notMatchAmt += 1
-                #     if notMatchAmt > 15 and not refIDstatement:
-                #         print('Double check this paper. Alt ref ID does not match ref id more than 15 times in paper %s, altref: %s, refid: %s' % (eid, altrefid, current_reference_id))
-                #         refIDstatement = True
-                # alt_ref_info_current = alt_ref_list[alt_ref_idx]['ref-info']
-                # if 'ref-title' in alt_ref_info_current and 'ref-titletext' in alt_ref_info_current['ref-title']:
-                #     title_txt = alt_ref_list[alt_ref_idx]['ref-info']['ref-title']['ref-titletext']
-                #     if isinstance(title_txt, list):
-                #         title_txt = str(title_txt[0])
-                #     ref_dict['publicationName'] = title_txt
-                if 'sourcetitle' in raw:
-                    ref_dict['publicationName'] = raw['sourcetitle']
-                current_refs.append(ref_dict)
-
-            ref_arr += current_refs
-            start += 40
-            req_url = url + '&startref='+ str(start)
-            if custom_count:
-                break
-            i += 1
-        return ref_arr
-
-    #makes a jsonObj pretty
-    def prettifyJson(self, jsonObj):
-        return self.reqs.prettifyJson(jsonObj)
-
-class Utility:
-    #returns dict with the wanted keys only, if keys empty, just flattens dict
-    def flattenDict (self, d):
-        def expand(key, value):
-            if isinstance(value, dict):
-                return [ (key + '_' + k, v) for k, v in self.flattenDict(value).items()]
-            else:
-                return [ (key, value) ]
-
-        items = [ item for k, v in d.items() for item in expand(k, v) ]
-        return dict(items)
-
-    # if no keys specified, return original dictionary
-    def filter(self, d, keys):
-        if len(keys) is 0:
-            return d
-        dictfilt = lambda x, y: dict([ (i,x[i]) for i in x if i in set(y) ])
-        return dictfilt(d, keys)
-
-    def removePrefix (self, origDict, sep=':'):
-        d = dict(origDict)
-        rem = []
-        for key, value in d.items():
-            if len(key.split(sep)) > 1:
-                rem.append(key)
-        for k in rem:
-            newkey = k.split(sep)[1]
-            d[newkey] = d.pop(k)
-        return d
-
-    def addPrefixToKeys(self, dOrig, prefix):
-        d = dict(dOrig)
-        keys = list(d.keys())
-        for key in keys:
-            d[prefix+key] = d.pop(key) 
-        return d
-
-    #stack overflow code
-    def merge_dicts(self, *dict_args):
-        '''
-        Given any number of dicts, shallow copy and merge into a new dict,
-        precedence goes to key value pairs in latter dicts.
-        '''
-        result = {}
-        for dictionary in dict_args:
-            result.update(dictionary)
-        return dict(result)
-
-    def changeKeyString(self, d, change, toThis):
-        keys = list(d.keys())
-        for key in keys:
-            newKey = key.replace(change, toThis)
-            d[newKey] = d.pop(key)
-
-    def changeValueString(self, d, change, toThis):
-        for key, val in d.items():
-            if change in val:
-                d[key] = val.replace(change, toThis)
-
-    def replaceKey(self, d, change, toThis):
-        d[toThis] = d.pop(change)
-
-    def removeNone(self, d):
-        keys = list(d.keys())
-        for key in keys:
-            if d[key] is None:
-                d.pop(key)
+from datapython.utility import Utility
+import random
 
 # all the SQL code to insert/update is here
 class DbInterface:
-    def __init__(self, author_id, citing_sort, paper_num, citing_num):
+    def __init__(self, author_id, paper_num):
         self.paper_num = paper_num
-        self.citing_num = citing_num
-        self.citing_sort = citing_sort
         self.utility = Utility()
         self.scops = ScopusApiLib()
         self.author_id = author_id
-        self.sqlTool = SqlCommand(author_id, citing_sort, paper_num, citing_num)
+        self.sqlTool = SqlCommand(author_id, paper_num)
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
 
     def rangeExistsOrAdd(self):
-        rangeTable = 'range_table_' + self.citing_sort
+        rangeTable = 'range_table'
         cur = self.conn.cursor()
-        cur.execute("select last_run_date, max_paper_num as pnum, max_citing_num as cnum, last_run_successful from %s where author_id='%s'" % (rangeTable, self.author_id))
+        cur.execute("select last_run_date, max_paper_num as pnum, last_run_successful \
+            from %s where author_id='%s'" % (rangeTable, self.author_id))
         row = cur.fetchone()
         today = datetime.datetime.now()
         if row:
             last_date = row[0]
             pnum = row[1]
-            cnum = row[2]
-            last_run_successful = row[3]
+            last_run_successful = row[2]
             date_diff = today - last_date
 
-            def rangeExists(last_run, pnum, cnum, days):
-                return (last_run_successful == 1 and pnum and cnum and int(self.paper_num) <= pnum
-                    and int(self.citing_num) <= cnum and date_diff.days < 365)
+            def rangeExists(last_run, pnum, days):
+                return (last_run_successful == 1 and pnum and int(self.paper_num) <= pnum
+                    and date_diff.days < 365)
 
-            if rangeExists(last_run_successful, pnum, cnum, date_diff.days):
+            if rangeExists(last_run_successful, pnum, date_diff.days):
                 return True
 
         toAdd = "('" + str(self.author_id) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + \
-            str(self.paper_num) + ", " + str(self.citing_num) + ", 0)"
-        query = "insert into %s (author_id, last_run_date, max_paper_num, max_citing_num, \
+            str(self.paper_num) + ", 0)"
+        query = "insert into %s (author_id, last_run_date, max_paper_num, \
             last_run_successful) values %s on duplicate key update author_id=values(author_id), \
             last_run_date=values(last_run_date), max_paper_num=values(max_paper_num), \
-            max_citing_num=values(max_citing_num), last_run_successful=values(last_run_successful)" % (rangeTable, toAdd)
+            last_run_successful=values(last_run_successful)" % (rangeTable, toAdd)
         cur.execute(query)
         self.conn.commit()
         cur.close()
         return False
 
     def rangeUpdateFailure(self, err_msg):
-        rangeTable = 'range_table_' + self.citing_sort
+        rangeTable = 'range_table'
+        print(err_msg)
         cur = self.conn.cursor()
         query = "update %s set last_run_successful=0, \
             last_error_msg='%s' where author_id='%s'" % (rangeTable, err_msg, self.author_id)
@@ -370,14 +59,14 @@ class DbInterface:
         self.conn.commit()
 
     def rangeUpdateSuccess(self):
-        rangeTable = 'range_table_' + self.citing_sort
+        rangeTable = 'range_table'
         cur = self.conn.cursor()
         query = "update %s set last_run_successful=1 where author_id='%s'" % (rangeTable, self.author_id)
         cur.execute(query)
         self.conn.commit()
 
 
-    def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict):
+    def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor):
 
         s1_table = self.sqlTool.get_s1_name()
 
@@ -386,7 +75,7 @@ class DbInterface:
         srcAuthor = self.utility.addPrefixToKeys(srcAuthor, 'src_author_')
         targAuthor = self.utility.addPrefixToKeys(targAuthor, 'targ_author_')
 
-        aggDict = self.utility.merge_dicts(srcPaperDict, targPaperDict, srcAuthor, targAuthor, record_dict)
+        aggDict = self.utility.merge_dicts(srcPaperDict, targPaperDict, srcAuthor, targAuthor)
         self.utility.removeNone(aggDict)
         self.utility.changeKeyString(aggDict, '-', '_')
         self.utility.changeKeyString(aggDict, '@', '')
@@ -507,7 +196,7 @@ class DbInterface:
 # any text/key processing is done here
 # there is no sql code in this class, that should all be handled in DbInterface()
 dbi = None
-sApi = ScopusApiLib()
+
 
 def storeRequestInfo(auth_id, auth_name, pap_num, cite_num, requester_name, requester_email, req_ip, request_raw):
     conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
@@ -525,11 +214,13 @@ def storeRequestInfo(auth_id, auth_name, pap_num, cite_num, requester_name, requ
     conn.close()
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort="citations_lower", refCount=-1, workers=10, test=False):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20, test=False):
+    sApi = ScopusApiLib()
     try:    
         author_profile = sApi.getAuthorMetrics(auth_id)
         author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
-        dbi = DbInterface(author_identifier, citing_sort, pap_num, cite_num)
+
+        dbi = DbInterface(author_identifier, pap_num)
         dbi.createTables()
 
         already = dbi.rangeExistsOrAdd()
@@ -545,12 +236,28 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, cite_num=20, citing_sort
             print('Getting author papers')
             papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
+            def generatePickProbability(ps, goal):
+                totalCbc = 0
+                for paper in ps:
+                    # print(paper)
+                    papInfo = sApi.getPaperInfo(paper)
+                    cbc = papInfo['citedby-count']
+                    totalCbc += int(cbc)
+                
+                p = 1
+                if goal <= totalCbc:
+                    p = goal/totalCbc
+
+                print("Total cited by among %d papers: %d, with probability of pick %f" % (len(ps), totalCbc, p))
+                return p
+
+            pickProb = generatePickProbability(papers, targetNum)
 
             executor = concurrent.futures.ProcessPoolExecutor(workers)
             paper_counter = 1
             processes = []
             for paper_arr in grouper(1, papers):
-                processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, cite_num, citing_sort, refCount))
+                processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, pickProb))
                 paper_counter += len(paper_arr)
 
             for p in processes:
@@ -581,61 +288,51 @@ def grouper(lengths, arr):
         arrarr.append(sub)
     return arrarr
 
-def processPaperMain(author_id, papers, paper_counter, pap_num, cite_num, citing_sort, refCount):
+def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability):
+    sApi = ScopusApiLib()
     for eid in papers:
         print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
-        #main_title = self.storePapersOnly(eid)
-        # references = sApi.getPaperReferences(eid, refCount=refCount)
-        # if references is None:
-        #     print('No Data on References')
-        #     references = []
-        citedbys = sApi.getCitingPapers(eid, num=cite_num, sort_order=citing_sort)
+
+        citedbys = sApi.getAllCitingPapers(eid, sort_order="citations_upper")
+
         thisPaperDict = sApi.getPaperInfo(eid) #do this here to avoid duplicate api calls
+
         if thisPaperDict is None:
             print("NONE MAIN PAPER")
             continue
 
-        #Puts the citing papers of the authors papers, and those respective authors
-        print('Handling citing papers...')
+        print('Handling citing papers. Total citing papers to sample from: %d' % len(citedbys))
 
         ccount = 1
         for citeIdx, citing in enumerate(citedbys):
+
+            # apply our probabilistic pick rate
+            rando = random.random()
+            if rando > pickProbability:
+                continue
+
             print('Paper %d. Citing Paper %d. EIDs: %s, %s' % (paper_counter, citeIdx, eid, citing))
             citePaperDict = sApi.getPaperInfo(citing)
             if citePaperDict is None:
                 print("NONE CITING PAPER")
                 continue
 
-            storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, cite_num,
-                paper_counter, citeIdx + 1, author_id, citing_sort)
-            storePaperReferences(citing, dict(citePaperDict), pap_num, cite_num,
-                paper_counter, citeIdx + 1, author_id, citing_sort, refCount=refCount)
+            storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, author_id)
+            storePaperReferences(citing, dict(citePaperDict), pap_num, author_id)
             ccount += 1
         paper_counter += 1
         print('Done citing papers.')
-        # # Puts the cited papers of the authors papers, and those respective authors
-        # print('Handling references...')
-        # #Repeated code from storePaperReferences for clarity
-        # for ref in references:
 
-        #     refid = ref['eid']
-        #     self.storeToStage1(eid, refid)
-        #     self.storePaperReferences(refid, refCount=refCount)
-        # print('Done references')
 
-def storePaperReferences(eid, srcPaperDict, pap_num, cite_num, papIdx, citeIdx, author_id, citing_sort, refCount=-1, ):
-    dbi = DbInterface(author_id, citing_sort, pap_num, cite_num)
+def storePaperReferences(eid, srcPaperDict, pap_num, author_id, refCount=-1):
+    dbi = DbInterface(author_id, pap_num)
+    sApi = ScopusApiLib()
     references = sApi.getPaperReferences(eid, refCount=refCount)
     if references is None:
         return
     srcAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict and srcPaperDict['authors'] is not None:
         srcAuthors = srcPaperDict.pop('authors')
-
-    #This record dict is used to keep track the paper num and citing paper num of record
-    # This is useful for creating a huge master S1/S2 table, then creating overcite table
-    #   from a subset, such as top 10 papers, and top 20 citing papers
-    record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
 
     scopus_author_id = author_id.split('_')[0]
     for targPaperDict in references:
@@ -644,13 +341,19 @@ def storePaperReferences(eid, srcPaperDict, pap_num, cite_num, papIdx, citeIdx, 
             targAuthors = targPaperDict.pop('authors')
 
         for targAuth in targAuthors:
-            # print(targAuth)
             if 'dc:identifier' in targAuth and targAuth['dc:identifier'][10:] == str(scopus_author_id):
-                for srcAuth in srcAuthors:
-                    dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
+                #Scopus api doesn't give enough info, so we manually make another api call to get title, coverdate, etc
+                # we only do this when we see our target author to avoid excessive API calls
+                fullInfoTargPaperDict = sApi.getPaperInfo(targPaperDict['eid'])
+                if 'authors' in fullInfoTargPaperDict:
+                    fullInfoTargPaperDict.pop('authors')
 
-def storeCiting(srcPaperDict, targPaperDict, pap_num, cite_num, papIdx, citeIdx, author_id, citing_sort):
-    dbi = DbInterface(author_id, citing_sort, pap_num, cite_num)
+                for srcAuth in srcAuthors:
+                    dbi.pushToS1(srcPaperDict, fullInfoTargPaperDict, srcAuth, targAuth)
+
+def storeCiting(srcPaperDict, targPaperDict, pap_num, author_id):
+    dbi = DbInterface(author_id, pap_num)
+    sApi = ScopusApiLib()
     srcAuthors = [{'indexed_name': None}]
     targAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict:
@@ -658,28 +361,11 @@ def storeCiting(srcPaperDict, targPaperDict, pap_num, cite_num, papIdx, citeIdx,
     if 'authors' in targPaperDict:
         targAuthors = targPaperDict.pop('authors')
 
-    record_dict = {'paper_index': str(papIdx), 'citing_index': str(citeIdx)}
-
     scopus_author_id = author_id.split('_')[0]
     for targAuth in targAuthors:
         if 'dc:identifier' in targAuth and targAuth['dc:identifier'][10:] == str(scopus_author_id):
             for srcAuth in srcAuthors:
-                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth, record_dict)
-
-
-# def storeToStage1(self, srcpapid, targpapid):
-#     srcPaperDict = sApi.getPaperInfo(srcpapid)
-#     targPaperDict = sApi.getPaperInfo(targpapid)
-#     srcAuthors = [{'indexed_name': None}]
-#     targAuthors = [{'indexed_name': None}]
-#     if 'authors' in srcPaperDict:
-#         srcAuthors = srcPaperDict.pop('authors')
-#     if 'authors' in targPaperDict:
-#         targAuthors = targPaperDict.pop('authors')
-
-#     for srcAuth in srcAuthors:
-#         for targAuth in targAuthors:
-#             dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
+                dbi.pushToS1(srcPaperDict, targPaperDict, srcAuth, targAuth)
 
 def getAuthorsFromPaper(origPaperDict):
     paperDict = dict(origPaperDict)
@@ -696,5 +382,6 @@ def getAuthorsFromPaper(origPaperDict):
     return author_arr
 
 def getAuthorInfo(auth_id):
+    sApi = ScopusApiLib()
     author = sApi.getAuthorMetrics(auth_id)
     return author
