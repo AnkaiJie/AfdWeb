@@ -33,11 +33,13 @@ sal = ScopusApiLib()
 # Pauli Piaggi
 # table_names = storeAuthorMain(35748826000, start_index=0, pap_num=5, workers=10, test=False)
 # Vasilakos
-# table_names = storeAuthorMain(22954842600, start_index=0, pap_num=5, workers=10, targetNum=20, test=True)
-table_names = {'s2': '35748826000_Paolo_Piaggi_citations_s2', 'overcite': '35748826000_Paolo_Piaggi_overcites_5', 's1': '35748826000_Paolo_Piaggi_citations_s1'}
+# table_names = storeAuthorMain(10141917500, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
+table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
+
+# table_names = {'s2': '35748826000_Paolo_Piaggi_citations_s2', 'overcite': '35748826000_Paolo_Piaggi_overcites_5', 's1': '35748826000_Paolo_Piaggi_citations_s1'}
 print(table_names)
 
-tool = Analysis(35748826000, table_names)
+tool = Analysis(22954842600, table_names)
 tool.plotOvercitesScatter()
 tool.overcitesCsv()
 

@@ -110,7 +110,11 @@ class ScopusApiLib:
             #paper has no citations to it
             if 'error' in resp[0] and resp[0]['error'] == 'Result set was empty':
                 break
-            paps = [pap['eid'] for pap in resp]
+                
+            paps = []
+            for pap in resp:
+                if 'eid' in pap:
+                    paps.append(pap['eid'])
             allCiting += paps
             start += MAXCOUNT
 

@@ -14,8 +14,8 @@ class Analysis:
 
     def __init__(self, authid, table_names):
         self.api = ScopusApiLib()
-        # self.authname = self.getAuthorName(authid)
-        self.authname = 'kanknknka nknkna '
+        self.authname = self.getAuthorName(authid)
+        # self.authname = 'kanknknka nknkna '
         self.authid = str(authid)
         self.table_names = table_names
 
@@ -57,7 +57,7 @@ class Analysis:
 
         ax.scatter(citedbys, citations, c='r')
         ax.set_xlim([-1, maxCitedby + 5])
-        ax.set_xticks(np.arange(0, maxCitedby, 20))
+        ax.set_xticks(np.arange(0, maxCitedby, 50))
         ax.set_ylim([0, maxOvers + 1])
         ax.set_ylabel('Number of Citations to ' + authname)
         ax.set_xlabel('Number of Times Citing Paper is Cited')
