@@ -198,15 +198,15 @@ class DbInterface:
 dbi = None
 
 
-def storeRequestInfo(auth_id, auth_name, pap_num, cite_num, requester_name, requester_email, req_ip, request_raw):
+def storeRequestInfo(auth_id, auth_name, pap_num, requester_name, requester_email, req_ip, request_raw):
     conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
     cur = conn.cursor()
 
     today = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    value_tuple = "('%s', '%s', '%s', %d, %d, '%s', '%s', '%s', \"%s\")" % (today, auth_id, auth_name, pap_num, 
-        cite_num, requester_name, requester_email, req_ip, request_raw)
+    value_tuple = "('%s', '%s', '%s', %d, '%s', '%s', '%s', \"%s\")" % (today, auth_id, auth_name, pap_num, 
+        requester_name, requester_email, req_ip, request_raw)
     query = 'insert into request_info_logs (req_date, author_id, author_name, paper_num, \
-        cite_num, requester_name, requester_email, requester_ip, request_raw) values %s' % value_tuple
+        requester_name, requester_email, requester_ip, request_raw) values %s' % value_tuple
 
     cur.execute(query)
     conn.commit()
@@ -248,7 +248,8 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20
                 if goal <= totalCbc:
                     p = goal/totalCbc
 
-                print("Total cited by among %d papers: %d, with probability of pick %f" % (len(ps), totalCbc, p))
+                print("Total cited by among %d papers: %d, with probability of pick %f. Target num %d" \
+                    % (len(ps), totalCbc, p, targetNum))
                 return p
 
             pickProb = generatePickProbability(papers, targetNum)

@@ -140,23 +140,25 @@ class SqlCommand:
         return self.prefix  + "_citations_s1"
 
     def check_overcites(self):
-        tab_name = self.prefix + "_overcites_" + self.suffix
+        tab_name = self.prefix + "_overcites"
         return """select exists (select * from information_schema.tables where 
         table_name=\"""" + tab_name + """\" and table_schema=\"CiteFraud\") """
 
     def update_overcites(self):
-        tab_name = self.prefix + "_overcites_" + self.suffix
+        tab_name = self.prefix + "_overcites"
         tab2_name = self.prefix + "_citations_s2"
         s=  """replace into """ + tab_name + """ 
             (
                 `targ_author_id`,
                 `src_paper_eid`,
                 `src_paper_title`,
+                `src_paper_authors`,
                 `src_paper_citedby_count`,
                 `overcites`
             )
-            select targ_author_id, src_paper_eid, src_paper_title, src_paper_citedby_count,
-                count(distinct targ_paper_eid) as overcites 
+            select targ_author_id, src_paper_eid, src_paper_title, \
+                GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
+                as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
                 from """ + tab2_name + """ group by targ_author_id, \
                 src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
@@ -164,12 +166,13 @@ class SqlCommand:
 
 
     def create_overcites(self):
-        tab_name = self.prefix + "_overcites_" + self.suffix
+        tab_name = self.prefix + "_overcites"
         tab2_name = self.prefix + "_citations_s2"
 
         s = """create table """ + tab_name + """ as
-            select targ_author_id, src_paper_eid, src_paper_title, src_paper_citedby_count,
-                count(distinct targ_paper_eid) as overcites 
+            select targ_author_id, src_paper_eid, src_paper_title, \
+                GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
+                as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
                 from """ + tab2_name + """ group by targ_author_id, \
                 src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
@@ -180,6 +183,6 @@ class SqlCommand:
 
     def getTableNames(self):
         tab1_name = self.prefix + "_citations_s1"
-        overname = self.prefix + "_overcites_" + self.suffix
+        overname = self.prefix + "_overcites"
         tab2_name = self.prefix + "_citations_s2"
         return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}

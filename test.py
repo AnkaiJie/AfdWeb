@@ -30,20 +30,55 @@ sal = ScopusApiLib()
 # print(sal.prettifyJson(ref))
 
 
-# Pauli Piaggi
-# table_names = storeAuthorMain(35748826000, start_index=0, pap_num=5, workers=10, test=False)
-# Vasilakos
+
+# # Paolo_Piaggi
+# table_names = storeAuthorMain(35748826000, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
+# print(table_names)
+# tool = Analysis(35748826000, table_names)
+
+
+# # Srinivasan Keshav
 # table_names = storeAuthorMain(10141917500, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
-# table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
+# print(table_names)
+# tool = Analysis(10141917500, table_names)
 
-table_names = {'s2': '35748826000_Paolo_Piaggi_citations_s2', 'overcite': '35748826000_Paolo_Piaggi_overcites_5', 's1': '35748826000_Paolo_Piaggi_citations_s1'}
-table_names = {'s2': '22954842600_Athanasios_Vasilakos_citations_s2', 'overcite': '22954842600_Athanasios_Vasilakos_overcites_20', 's1': '22954842600_Athanasios_Vasilakos_citations_s1'}
+# # Prabhakar Raghavan
+# table_names = storeAuthorMain(7006894026, start_index=0, pap_num=20, workers=10, targetNum=100, test=False)
+# print(table_names)
+# tool = Analysis(7006894026, table_names)
+
+# # Luca Beninini
+# table_names = storeAuthorMain(35556997000, start_index=0, pap_num=20, workers=10, targetNum=150, test=False)
+# print(table_names)
+# tool = Analysis(35556997000, table_names)
+
+# # Stephen Hawking
+# table_names = storeAuthorMain(6701475619, start_index=0, pap_num=20, workers=10, targetNum=150, test=False)
+# print(table_names)
+# tool = Analysis(6701475619, table_names)
+
+# # Alouini, Mohamed Slim
+# table_names = storeAuthorMain(35570711700, start_index=0, pap_num=20, workers=10, targetNum=150, test=False)
+# print(table_names)
+# tool = Analysis(35570711700, table_names)
 
 
+# Athanasios Vasilakos
+table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
 print(table_names)
-
 tool = Analysis(22954842600, table_names)
 
-tool.plotOverCitesStacked()
-tool.plotOvercitesScatter()
-tool.overcitesCsv()
+# Pinhan Ho
+table_names = storeAuthorMain(7402211578, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+print(table_names)
+tool = Analysis(7402211578, table_names)
+
+# Herbert Simon
+table_names = storeAuthorMain(7402135283, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+print(table_names)
+tool = Analysis(7402135283, table_names)
+
+# Helena Karsten
+table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+print(table_names)
+tool = Analysis(6603889928, table_names)

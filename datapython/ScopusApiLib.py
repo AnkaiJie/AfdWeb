@@ -104,8 +104,17 @@ class ScopusApiLib:
             tempurl = url + '&start=' + str(start)
             resp = self.reqs.getJson(tempurl)
             #previous result gave 200 and there is no more
-            if 'entry' not in resp['search-results']:
-                break
+            try:
+                if 'entry' not in resp['search-results']:
+                    break
+            except KeyError:
+                # Usually happens when paper has > 5000 citations
+                # Scopus doesn't support more than 5000 searches ...
+                # So we just break 
+                if resp['service-error']['status']['statusCode'] == "INVALID_INPUT":
+                    print (resp)
+                    print (tempurl)
+                    break
             resp = resp['search-results']['entry']
             #paper has no citations to it
             if 'error' in resp[0] and resp[0]['error'] == 'Result set was empty':

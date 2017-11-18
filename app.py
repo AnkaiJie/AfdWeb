@@ -23,11 +23,12 @@ def send_overcites():
 
         req_ip = request.environ.get('REMOTE_ADDR', '')
         req_raw = pprint.pformat(request.environ, depth=2)
+
         store_request.delay(form['author_id'], int(form['paper_num']),
-            int(form['cite_num']), form['name'], form['email'], indexed_name, req_ip, req_raw)
+            form['name'], form['email'], indexed_name, req_ip, req_raw)
 
         run_overcite_script.delay(form['author_id'], int(form['paper_num']),
-            int(form['cite_num']), form['name'], form['email'], indexed_name)
+            form['name'], form['email'], indexed_name)
 
         return render_template('finish.html')
     except KeyError:

@@ -19,6 +19,15 @@ class Analysis:
         self.authid = str(authid)
         self.table_names = table_names
 
+        stackedName = self.plotOverCitesStacked()
+        scatterName = self.plotOvercitesScatter()
+        csvName = self.overcitesCsv()
+
+        self.visualNames = [stackedName, scatterName, csvName]
+
+    def getChartNames(self):
+        return self.visualNames
+
     def getAuthorName(self, id):
         authname = 'Unknown'
         details = self.api.getAuthorMetrics(id)
@@ -38,7 +47,9 @@ class Analysis:
         rows = curs.fetchall()
         df = pd.DataFrame([i for i in rows])
         df.rename(columns={0: 'Target Author', 1: 'Citing Paper EID', \
-            2:'Citing Paper Title', 3:'Citing Paper Cited By Count', 4:'Citations to Target Author'}, inplace=True)
+            2:'Citing Paper Title', 3:'Citing Paper Authors', 4:'Citing Paper Cited By Count', \
+            5:'Citations to Target Author'}, inplace=True)
+        df = df.fillna(0)
         return df
 
 
@@ -47,6 +58,7 @@ class Analysis:
         fig, ax = plt.subplots(figsize=(10,10))
         fig.subplots_adjust(bottom=0.25)
         authname = self.authname
+
 
         maxCitedby = max(df['Citing Paper Cited By Count'])
         maxOvers = max(df['Citations to Target Author'])
@@ -63,7 +75,7 @@ class Analysis:
         ax.set_xticks(np.arange(0, maxCitedby, xtick))
         ax.set_ylim([0, maxOvers + 1])
         ax.set_ylabel('Number of Citations to ' + authname)
-        ax.set_xlabel('Number of Times Citing Paper is Cited')
+        ax.set_xlabel('Citing Paper Cited-by Count')
 
         ax.set_title('Influence Scatter Plot: Degree of Influence from ' + authname + \
          '\n vs Degree of Popularity of Paper out of ' + str(len(df)) + ' Citing Papers')
@@ -159,10 +171,10 @@ class Analysis:
         ax.set_yticks(np.arange(0, max(numRows, 5), 1))
         ax.set_yticklabels(range(max(numRows,10)))
 
-        ax.set_ylabel('Number of Citations to ' + authname)
-        ax.set_xlabel('Number of Papers')
+        ax.set_ylabel('Number of Citations (X) to ' + authname)
+        ax.set_xlabel('Number of Papers with X citation to ' + authname)
 
-        ax.set_title('Influence Bar Plot: Frequency of citations to ' + authname +\
+        ax.set_title('Influence Bar Plot: Frequency of Citations to ' + authname +\
          '\n Color Grouped by Number of Citations to the Citing Paper\n out of ' + str(len(df)) + ' Citing Papers')
 
 
@@ -171,7 +183,7 @@ class Analysis:
         yellow_patch = mpatches.Patch(color='y', label='20 < n <= 50')
         red_patch = mpatches.Patch(color='r', label='50 < n <= 200')
         mag_patch = mpatches.Patch(color='m', label='n > 200')
-        legend = ax.legend(title="Number of cites \nto Citing Paper (n)", shadow=True,
+        legend = ax.legend(title="Cited-by Count \n of Citing Paper", shadow=True,
             handles=[cyan_patch, green_patch, yellow_patch, red_patch, mag_patch])
         legend.get_frame().set_facecolor('#ffffff')
 
@@ -181,6 +193,8 @@ class Analysis:
             fig.savefig(savename)
         else:
             plt.show()
+
+        return savename
 
 
     def overcitesCsv(self):
@@ -192,27 +206,20 @@ class Analysis:
         writer.writerow(['Target Author Name: ' + self.authname])
         writer.writerow([])
 
-        writer.writerow(['Citing Paper EID', 'Citing Paper Title', 'Citing Paper Cited By Count', 'Citation Count'])
+        writer.writerow(['Citing Paper EID', 'Citing Paper Title', 'Citing Paper Authors', \
+            'Citing Paper Cited By Count', 'Influence Count (Citations to Target Author)'])
+
+        df.sort_values('Citations to Target Author', ascending=False, inplace=True)
 
         for idx, row in df.iterrows():
-            # src_paper_eid = row['Citing Paper']
-            # paper_info = self.api.getPaperInfo(src_paper_eid)
-            # paper_title = "Unknown"
-            # if 'title' in paper_info:
-            #     paper_title = paper_info['title']
+            cite, title, authors, citedby, overcites = row['Citing Paper EID'], row['Citing Paper Title'], \
+                row['Citing Paper Authors'], row['Citing Paper Cited By Count'], \
+                row['Citations to Target Author']
 
-            # paper_author_arr = []
-            # if 'authors' in paper_info:
-            #     for auth in paper_info['authors']:
-            #         if 'indexed-name' in auth:
-            #             paper_author_arr.append(auth['indexed-name'].strip('.'))
+            if authors == 0:
+                authors = 'No Author Info'
 
-            # paper_authors = ','.join(paper_author_arr)
-
-            cite, title, citedby, overcites = row['Citing Paper EID'], row['Citing Paper Title'], \
-                row['Citing Paper Cited By Count'], row['Citations to Target Author']
-
-            writer.writerow([cite, title, citedby, overcites])
+            writer.writerow([cite, title, authors, citedby, overcites])
 
         return name
 
