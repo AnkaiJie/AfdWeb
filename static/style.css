@@ -41,6 +41,11 @@ body {
   width: 27em;
 }
 
+#contact input[type="password"] {
+  width: 27em;
+}
+
+
 #contact {
   background: #F9F9F9;
   padding: 25px;
