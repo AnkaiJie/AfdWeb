@@ -3,3 +3,4 @@ afdenv/
 afdenv2/
 datapython/graphs/*
 *.pyc
+venv/
