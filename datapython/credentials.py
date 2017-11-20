@@ -10,3 +10,4 @@ PASSWORD = 'iD3t3ctiv'
 DBNAME='CiteFraud'
 LOGINUSER='waterloo'
 LOGINPASS='Waterloo16'
+

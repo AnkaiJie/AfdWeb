@@ -16,9 +16,9 @@ def login():
         session.pop('user', None)
         if request.form['username'].lower() == LOGINUSER and request.form['password'] == LOGINPASS:
             session['user'] = request.form['username']
-            return redirect('/index')
+            return redirect('/afdserver/index')
         else:
-            return render_template('login.html', passStatus='Incorrect Login')
+            return render_template('/afdserver/login.html', passStatus='Incorrect Login')
     return render_template('login.html')
 
 
