@@ -11,19 +11,22 @@
 </head>
 <body>
 
-<div class="container"> 
-  <form id="contact" action="/afdserver/index" method="get">
-    <h2>Request Received</h2>
-    <div>
-      <h4>
-        Please allow up to 30 minutes for your request to process. You will recieve an email with the results upon completion. 
-      </h4>
-    </div>
+<div class="container">  
+  <form id="contact" method="post">
+    <div style="text-align:center"><h2>Academic Influence Analyzer - Login</h2></div>
+    <div style="text-align:center; color:red"> {{ passStatus }}</div>
+    <fieldset>
+      <input placeholder="Username" name="username" type="text" required autofocus>
     </fieldset>
-      <button type="submit" name="return">Make another request</button>
+    <fieldset>
+      <input placeholder="Password" name="password" type="password" required>
+    </fieldset>
+    </fieldset>
+      <button name="submit" type="submit" id="login-submit" data-submit="...logging in">Submit</button>
     </fieldset>
   </form>
 </div>
 
 </body>
 </html>
+

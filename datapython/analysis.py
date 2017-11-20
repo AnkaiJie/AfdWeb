@@ -1,10 +1,10 @@
 import matplotlib
 matplotlib.use('Agg')
 from datapython.credentials import API_KEY, DBNAME, USER, PASSWORD, HOST
-import operator
 import pymysql
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 import math
 from datapython.apilib import ScopusApiLib
@@ -14,128 +14,214 @@ plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid, table_names, citing_sort):
+    def __init__(self, authid, table_names):
         self.api = ScopusApiLib()
         self.authname = self.getAuthorName(authid)
+        # self.authname = 'Athanasios Vasilakos'
+        self.authid = str(authid)
         self.table_names = table_names
-        self.citing_sort = citing_sort
+
+        stackedName = self.plotOverCitesStacked()
+        scatterName = self.plotOvercitesScatter()
+        csvName = self.overcitesCsv()
+
+        self.visualNames = [stackedName, scatterName, csvName]
+
+    def getChartNames(self):
+        return self.visualNames
 
     def getAuthorName(self, id):
         authname = 'Unknown'
         details = self.api.getAuthorMetrics(id)
         if 'given-name' in details and 'surname' in details:
             authname = details['given-name'] + " " + details['surname']
-        elif 'indexed-name' in author_info:
-            authname = author_info['indexed-name']
+        elif 'indexed-name' in details:
+            authname = details['indexed-name']
         return authname
 
-    def getOvercites(self, authid):
+    def getOvercites(self):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
-        cmd = "select * from " + self.table_names['overcite'] + " where targ_author_id=" + "'" + authid + "'" + " order by overcites desc"
+        cmd = "select * from " + self.table_names['overcite'] + " where \
+        targ_author_id=" + "'" + self.authid + "'" + " order by src_paper_citedby_count"
 
         curs.execute(cmd)
         rows = curs.fetchall()
         df = pd.DataFrame([i for i in rows])
-        df.rename(columns={0: 'Target Author', 1: 'Citing Paper', 2:'Author Count', 3:'Overcites'}, inplace=True)
+        df.rename(columns={0: 'Target Author', 1: 'Citing Paper EID', \
+            2:'Citing Paper Title', 3:'Citing Paper Authors', 4:'Citing Paper Cited By Count', \
+            5:'Citations to Target Author'}, inplace=True)
+        df = df.fillna(0)
         return df
 
 
-    def plotOvercitesBar(self, authid, save=True):
-        df = self.getOvercites(authid)
+    def plotOvercitesScatter(self, save=True):
+        df = self.getOvercites()
         fig, ax = plt.subplots(figsize=(10,10))
         fig.subplots_adjust(bottom=0.25)
-        authname = self.authname 
-        papers = df['Citing Paper'][:25]
-        x_pos = np.arange(len(papers))
-        overs = df['Overcites'][:25]
-        ax.bar(x_pos, overs, align='center')
-        ax.set_xlim([-1, x_pos.size])
-        ax.set_xticks(x_pos)
-        ax.set_ylim([0, np.amax(overs) + 1])
-        ax.set_xticklabels(papers, rotation="90")
-        ax.set_ylabel('Number of Citations to ' + authname)
-        ax.set_xlabel('Citing Paper ID')
-        num = 25
-        if (len(papers) < 25):
-            num = len(papers)
-        ax.set_title('Influence Bar Graph: Top ' + str(num) + ' influenced papers for author ' + authname + '\n from ' + str(len(df)) + ' citing papers')
-        savename = 'datapython/graphs/Bar_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
-        if save:
-            fig.savefig(savename)
-        else:
-            plt.show()
-
-        return savename
-
-    def plotOvercitesHist(self, authid, save=True, threshold =10):
-        authname = self.authname 
-        df = self.getOvercites(authid)
-        fig,ax = plt.subplots(figsize=(10,10))
-        fig.subplots_adjust(bottom=0.25)
-
-        freq = {}
-        for idx, row in df.iterrows():
-            overs = row['Overcites']
-            if overs > threshold-1:
-                f = freq.get(overs, 0)
-                freq[overs] = f + 1
-
-        sorted_freq = sorted(freq.items(), key=operator.itemgetter(0))
-        x_pos = np.arange(len(sorted_freq))
-        overcite_nums = [x[0] for x in sorted_freq]
-        overcite_num_freqs = [x[1] for x in sorted_freq]
-
-        ax.bar(x_pos, overcite_num_freqs, align='center')
-        ax.set_xlim([-1, x_pos.size])
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(overcite_nums, rotation="90")
-        if len(overcite_num_freqs) > 0:
-            ax.set_ylim([0, np.amax(overcite_num_freqs) + 1])
-        ax.set_ylabel('Number of Papers')
-        ax.set_xlabel('Citation Count to ' + authname)
-        ax.set_title('Influence Histogram: Number of Papers With >=' + str(threshold) + ' Influence Threshold\n from ' + str(len(df)) + ' citing papers for ' + authname)
-        savename = 'datapython/graphs/Hist_' + '_'.join(authname.split()) + '_' + self.citing_sort + '.png'
-        if save:
-            fig.savefig(savename)
-        elif save:
-            fig.savefig(savename + ".png")
-        else:
-            plt.show()
-
-        return savename
-
-    def overcitesCsv(self, authid):
         authname = self.authname
-        df = self.getOvercites(authid)
-        name = 'datapython/graphs/Influence_' + '_'.join(authname.split()) + '_' + self.citing_sort +  '.csv'
+
+
+        maxCitedby = max(df['Citing Paper Cited By Count'])
+        maxOvers = max(df['Citations to Target Author'])
+
+        def roundUp(x):
+            return int(math.ceil(x / 10.0)) * 10
+
+        xtick = roundUp(maxCitedby // 10)
+
+        citedbys = df['Citing Paper Cited By Count']
+        citations = df['Citations to Target Author']
+
+        ax.set_xlim([-1, maxCitedby + 5])
+        ax.set_xticks(np.arange(0, maxCitedby, xtick))
+        ax.set_ylim([0, maxOvers + 1])
+        ax.set_ylabel('Number of Citations to ' + authname)
+        ax.set_xlabel('Citing Paper Cited-by Count')
+
+        ax.set_title('Influence Scatter Plot: Degree of Influence from ' + authname + \
+         '\n vs Degree of Popularity of Paper out of ' + str(len(df)) + ' Citing Papers')
+
+        # heatmap, xedges, yedges = np.histogram2d(citedbys, citations, bins=50)
+
+        ax.scatter(citedbys, citations, c='r')
+
+        savename = 'datapython/graphs/Scatter_' + '_'.join(authname.split()) + '.png'
+        if save:
+            fig.savefig(savename)
+        else:
+            plt.show()
+
+
+        return savename
+
+    def plotOverCitesStacked(self, save=True):
+        df = self.getOvercites()
+        fig, ax = plt.subplots(figsize=(10,10))
+        fig.subplots_adjust(bottom=0.25)
+        authname = self.authname
+        citedBys = df['Citing Paper Cited By Count']
+        overs = df['Citations to Target Author']
+        maxOvers = max(overs)
+        numRows = len(range(maxOvers)) + 1
+
+        LOW = 5
+        MID = 20
+        HIGH = 50
+        VERYHIGH = 200
+
+        barDict = {}
+        def mapToIndex(cb):
+            if cb <= LOW:
+                return 0
+            elif cb <= MID:
+                return 1
+            elif cb <= HIGH:
+                return 2
+            elif cb <= VERYHIGH:
+                return 3
+            else:
+                return 4
+        for idx, over in enumerate(overs):
+            # print(over)
+            cb = citedBys[idx]
+            cbBin = mapToIndex(cb)
+            if over not in barDict:
+                # 0-5, 6-20, 21-50, >50
+                barDict[over] = [0,0,0,0,0]
+
+            barDict[over][cbBin] += 1
+
+        rows = []
+        widths = []
+        labels = []
+        # print(barDict)
+        for key, val in barDict.items():
+            for freq in val:
+                rows.append(key)
+                widths.append(freq)
+                labels.append(freq)
+
+        colors ='cgyrm'
+
+        patch_handles = []
+
+        fig = plt.figure(figsize=(10,8))
+        ax = fig.add_subplot(111)
+
+        left = np.zeros(numRows,)
+        row_counts = np.zeros(numRows,)
+
+        # print(left)
+        # print(row_counts)
+
+        for (r, w, l) in zip(rows, widths, labels):
+            # print (r, w, l)
+            if w == 0:
+                continue
+            patch_handles.append(ax.barh(r, w, align='center', left=left[r],
+                color=colors[int(row_counts[r]) % len(colors)]))
+            left[r] += w
+            row_counts[r] += 1
+            # we know there is only one patch but could enumerate if expanded
+            patch = patch_handles[-1][0] 
+            bl = patch.get_xy()
+            x = 0.5*patch.get_width() + bl[0]
+            y = 0.5*patch.get_height() + bl[1]
+            ax.text(x, y, "%d" % (l), ha='center',va='center')
+
+        ax.set_yticks(np.arange(0, max(numRows, 5), 1))
+        ax.set_yticklabels(range(max(numRows,10)))
+
+        ax.set_ylabel('Number of Citations (X) to ' + authname)
+        ax.set_xlabel('Number of Papers with X citation to ' + authname)
+
+        ax.set_title('Influence Bar Plot: Frequency of Citations to ' + authname +\
+         '\n Color Grouped by Number of Citations to the Citing Paper\n out of ' + str(len(df)) + ' Citing Papers')
+
+
+        cyan_patch = mpatches.Patch(color='c', label='n <= 5')
+        green_patch = mpatches.Patch(color='g', label='5 < n <= 20')
+        yellow_patch = mpatches.Patch(color='y', label='20 < n <= 50')
+        red_patch = mpatches.Patch(color='r', label='50 < n <= 200')
+        mag_patch = mpatches.Patch(color='m', label='n > 200')
+        legend = ax.legend(title="Cited-by Count \n of Citing Paper", shadow=True,
+            handles=[cyan_patch, green_patch, yellow_patch, red_patch, mag_patch])
+        legend.get_frame().set_facecolor('#ffffff')
+
+
+        savename = 'datapython/graphs/StackedBar_' + '_'.join(authname.split()) + '.png'
+        if save:
+            fig.savefig(savename)
+        else:
+            plt.show()
+
+        return savename
+
+
+    def overcitesCsv(self):
+        df = self.getOvercites()
+        name = 'datapython/graphs/Influence_' + '_'.join(self.authname.split()) + '.csv'
         writer = csv.writer(open(name, 'w'), lineterminator='\n')
 
-        writer.writerow(['Target Author Id: '  + authid])
-        writer.writerow(['Target Author Name: ' + authname])
+        writer.writerow(['Target Author Id: '  + self.authid])
+        writer.writerow(['Target Author Name: ' + self.authname])
         writer.writerow([])
 
-        writer.writerow(['Citing Paper', 'Citing Paper Title', 'Citing Paper Authors', 'Citation Count'])
+        writer.writerow(['Citing Paper EID', 'Citing Paper Title', 'Citing Paper Authors', \
+            'Citing Paper Cited By Count', 'Influence Count (Citations to Target Author)'])
 
-        author_info = self.api.getAuthorMetrics(authid)
+        df.sort_values('Citations to Target Author', ascending=False, inplace=True)
 
         for idx, row in df.iterrows():
-            src_paper_eid = row['Citing Paper']
-            paper_info = self.api.getPaperInfo(src_paper_eid)
-            paper_title = "Unknown"
-            if 'title' in paper_info:
-                paper_title = paper_info['title']
+            cite, title, authors, citedby, overcites = row['Citing Paper EID'], row['Citing Paper Title'], \
+                row['Citing Paper Authors'], row['Citing Paper Cited By Count'], \
+                row['Citations to Target Author']
 
-            paper_author_arr = []
-            if 'authors' in paper_info:
-                for auth in paper_info['authors']:
-                    if 'indexed-name' in auth:
-                        paper_author_arr.append(auth['indexed-name'].strip('.'))
+            if authors == 0:
+                authors = 'No Author Info'
 
-            paper_authors = ','.join(paper_author_arr)
-
-            cite, overcites = row['Citing Paper'],row['Overcites']
-            writer.writerow([cite, paper_title, paper_authors, overcites])
+            writer.writerow([cite, title, authors, citedby, overcites])
 
         return name
 

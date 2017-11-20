@@ -47,7 +47,7 @@ def send_email_success(author_id, name, email, zipath, author_name):
     subject = "Analysis for author " + str(author_id)
     send_email(subject, email, msg, attach_path=zipath)
 
-def send_email_failure(author_id, name, email, author_name, pnum, cnum, where):
+def send_email_failure(author_id, name, email, author_name, pnum, where):
     msg = """Hey %s, we were unable to analyze %s with author id %s 
     due to an internal error. We will investigate this error and contact you when it is 
     fixed. Thanks for your patience.""" % (name, author_name, author_id)
@@ -57,27 +57,16 @@ def send_email_failure(author_id, name, email, author_name, pnum, cnum, where):
     msg2 = """User with email %s has encountered an error while 
     investigating %s with author_id %s. Requested paper num was %d and 
     request cite num was %d. Error was thrown in %s. 
-    Please investigate.""" % (email, author_name, author_id, pnum, cnum, where)
+    Please investigate.""" % (email, author_name, author_id, pnum, where)
     subject2 = "Error thrown on academic influence analyzer."
     admin_recipient = 'ankaijie@gmail.com'
     send_email(subject2, admin_recipient, msg2)
 
 
-def analyze(author_id, name, email, table_names_bylast, table_names_byfront, author_name):
-    to_zip = []
+def analyze(author_id, name, email, table_names, author_name):
     # least cited citing papers
-    tool = Analysis(author_id, table_names_bylast, citing_sort="lower_citing")
-    barpath = tool.plotOvercitesBar(author_id)
-    histpath = tool.plotOvercitesHist(author_id)
-    csvpath = tool.overcitesCsv(author_id)
-    to_zip += [barpath, histpath, csvpath]
-
-    # most cited citing papers
-    tool2 = Analysis(author_id, table_names_byfront, citing_sort="upper_citing")
-    barpath2 = tool2.plotOvercitesBar(author_id)
-    histpath2 = tool2.plotOvercitesHist(author_id)
-    csvpath2 = tool2.overcitesCsv(author_id)
-    to_zip += [barpath2, histpath2, csvpath2]
+    tool = Analysis(author_id, table_names)
+    to_zip = tool.getChartNames()
 
     to_zip += ['datapython/graphs/README.pdf']
 
@@ -90,6 +79,7 @@ def analyze(author_id, name, email, table_names_bylast, table_names_byfront, aut
 
     send_email_success(author_id, name, email, zipath, author_name)
 
+
 @worker_process_init.connect
 def fix_multiprocessing(**kwargs):
     # don't be a daemon, so we can create new subprocesses
@@ -97,30 +87,24 @@ def fix_multiprocessing(**kwargs):
     current_process().daemon = False
 
 @capp.task
-def run_overcite_script(author_id, pnum, cnum, name, email, author_name):
-    table_names_bylast = storeAuthorMain(author_id, start_index=0, pap_num=pnum, cite_num=cnum,
-        citing_sort="citations_lower", workers=10)
+def run_overcite_script(author_id, pnum, name, email, author_name):
 
-    if table_names_bylast is None:
+    table_names = storeAuthorMain(author_id, start_index=0, pap_num=20, 
+        workers=10, targetNum=200, test=False)
+    print(table_names)
+
+    if table_names is None:
         send_email_failure(author_id, name, email, author_name, pnum,
-            cnum, where='apilib script bylast')
-        return
-
-    table_names_byfront = storeAuthorMain(author_id, start_index=0, pap_num=pnum, cite_num=cnum,
-        citing_sort="citations_upper", workers=10)
-
-    if table_names_byfront is None:
-        send_email_failure(author_id, name, email, author_name, pnum,
-            cnum, where='apilib script byfront')
+            where='apilib script')
         return
 
     try:
-        analyze(author_id, name, email, table_names_bylast, table_names_byfront, author_name)
+        analyze(author_id, name, email, table_names, author_name)
     except Exception:
         print(traceback.format_exc())
-        send_email_failure(author_id, name, email, author_name, pnum, cnum,
+        send_email_failure(author_id, name, email, author_name, pnum,
             where='analyze script, with exception: ' + traceback.format_exc())
 
 @capp.task
-def store_request(author_id, pnum, cnum, name, email, author_name, req_ip, request_raw):
-    storeRequestInfo(author_id, author_name, pnum, cnum, name, email, req_ip, request_raw)
+def store_request(author_id, pnum, name, email, author_name, req_ip, request_raw):
+    storeRequestInfo(author_id, author_name, pnum, name, email, req_ip, request_raw)
