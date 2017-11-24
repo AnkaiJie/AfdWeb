@@ -62,23 +62,69 @@ sal = ScopusApiLib()
 # print(table_names)
 # tool = Analysis(35570711700, table_names)
 
+def getTableNames(aid, name):
+	aid = str(aid)
+	prefix = aid +'_' + '_'.join(name.split())
+	tab1_name = prefix + "_citations_s1"
+	overname = prefix + "_overcites"
+	tab2_name = prefix + "_citations_s2"
+	return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}
+
+
+# # Athanasios Vasilakos
+# table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(22954842600, table_names)
+
+# # Pinhan Ho
+# table_names = storeAuthorMain(7402211578, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(7402211578, table_names)
+
+# # Herbert Simon
+# table_names = storeAuthorMain(7402135283, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(7402135283, table_names)
+
+# # Helena Karsten
+# table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(6603889928, table_names)
+
+
+# Stephen Hawking
+table_names = getTableNames(6701475619, "Stephen Hawking")
+print(table_names)
+tool = Analysis(6701475619, table_names, custom_name='Stephen Hawking')
 
 # Athanasios Vasilakos
-table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+table_names = getTableNames(22954842600, "Athanasios Vasilakos")
 print(table_names)
-tool = Analysis(22954842600, table_names)
+tool = Analysis(22954842600, table_names, custom_name='Author F')
 
-# Pinhan Ho
-table_names = storeAuthorMain(7402211578, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
-print(table_names)
-tool = Analysis(7402211578, table_names)
 
 # Herbert Simon
-table_names = storeAuthorMain(7402135283, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+table_names = getTableNames(7402135283, 'Herbert Simon')
 print(table_names)
-tool = Analysis(7402135283, table_names)
+tool = Analysis(7402135283, table_names, custom_name='Author A')
 
 # Helena Karsten
-table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+table_names = getTableNames(6603889928, 'Helena Karsten')
 print(table_names)
-tool = Analysis(6603889928, table_names)
+tool = Analysis(6603889928, table_names, custom_name='Author B')
+
+
+# Anil Jain
+table_names = getTableNames(36071504600, 'Anil Jain')
+print(table_names)
+tool = Analysis(36071504600, table_names, custom_name='Author C')
+
+# Pascal Fua
+table_names = getTableNames(55159125200, 'Pascal Fua')
+print(table_names)
+tool = Analysis(55159125200, table_names, custom_name='Author E')
+
+# Donald Knuth
+table_names = getTableNames(7004138948, 'Donald Knuth')
+print(table_names)
+tool = Analysis(7004138948, table_names, custom_name='Author D')

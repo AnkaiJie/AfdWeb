@@ -12,16 +12,25 @@ plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid, table_names):
+    def __init__(self, authid, table_names, custom_name=None):
         self.api = ScopusApiLib()
-        self.authname = self.getAuthorName(authid)
+
+        if custom_name is None:
+            self.authname = self.getAuthorName(authid)
+        else:
+            self.authname = custom_name
         # self.authname = 'Athanasios Vasilakos'
         self.authid = str(authid)
         self.table_names = table_names
 
+        self.indices = self.getIndices()
+        self.influenceIndex = str(self.indices[0])
+        self.fraudIndex = str(self.indices[1])
+
         stackedName = self.plotOverCitesStacked()
         scatterName = self.plotOvercitesScatter()
         csvName = self.overcitesCsv()
+
 
         self.visualNames = [stackedName, scatterName, csvName]
 
@@ -50,8 +59,31 @@ class Analysis:
             2:'Citing Paper Title', 3:'Citing Paper Authors', 4:'Citing Paper Cited By Count', \
             5:'Citations to Target Author'}, inplace=True)
         df = df.fillna(0)
+
+        curs.close()
+        conn.close()
+
         return df
 
+    def getIndices(self):
+        conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
+        curs = conn.cursor()
+        iCmd = "select avg(overcites*src_paper_citedby_count) from " + self.table_names['overcite']
+
+        curs.execute(iCmd)
+        rows = curs.fetchone()
+        influenceIndex = rows[0]
+
+        fCmd = "select count(*) from " + self.table_names['overcite'] + " where overcites >= 5 and src_paper_citedby_count <=5;"
+
+        curs.execute(fCmd)
+        rows = curs.fetchone()
+        fraudIndex = rows[0]
+
+        curs.close()
+        conn.close()
+
+        return (influenceIndex, fraudIndex)
 
     def plotOvercitesScatter(self, save=True):
         df = self.getOvercites()
@@ -78,7 +110,8 @@ class Analysis:
         ax.set_xlabel('Citing Paper Cited-by Count')
 
         ax.set_title('Influence Scatter Plot: Degree of Influence from ' + authname + \
-         '\n vs Degree of Popularity of Paper out of ' + str(len(df)) + ' Citing Papers')
+         '\n vs Degree of Popularity of Paper out of ' + str(len(df)) + ' Citing Papers, \n \
+          I=' + self.influenceIndex + ', F=' + self.fraudIndex )
 
         # heatmap, xedges, yedges = np.histogram2d(citedbys, citations, bins=50)
 
@@ -156,6 +189,8 @@ class Analysis:
         for (r, w, l) in zip(rows, widths, labels):
             # print (r, w, l)
             if w == 0:
+                left[r] += w
+                row_counts[r] += 1
                 continue
             patch_handles.append(ax.barh(r, w, align='center', left=left[r],
                 color=colors[int(row_counts[r]) % len(colors)]))
@@ -175,7 +210,8 @@ class Analysis:
         ax.set_xlabel('Number of Papers with X citation to ' + authname)
 
         ax.set_title('Influence Bar Plot: Frequency of Citations to ' + authname +\
-         '\n Color Grouped by Number of Citations to the Citing Paper\n out of ' + str(len(df)) + ' Citing Papers')
+         '\n Color Grouped by Number of Citations to the Citing Paper\n out of ' + str(len(df)) + \
+         ' Citing Papers, I=' + self.influenceIndex + ', F=' + self.fraudIndex)
 
 
         cyan_patch = mpatches.Patch(color='c', label='n <= 5')
