@@ -68,7 +68,7 @@ class Analysis:
     def getIndices(self):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
-        iCmd = "select avg(overcites*src_paper_citedby_count) from " + self.table_names['overcite']
+        iCmd = "select round(avg(overcites*src_paper_citedby_count), 1) from " + self.table_names['overcite']
 
         curs.execute(iCmd)
         rows = curs.fetchone()
