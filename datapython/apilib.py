@@ -10,15 +10,21 @@ import random
 
 # all the SQL code to insert/update is here
 class DbInterface:
-    def __init__(self, author_id, paper_num):
+    def __init__(self, author_id, paper_num, resample=False, sampleNum=None):
         self.paper_num = paper_num
         self.utility = Utility()
         self.scops = ScopusApiLib()
         self.author_id = author_id
-        self.sqlTool = SqlCommand(author_id, paper_num)
+        self.sqlTool = SqlCommand(author_id, paper_num, sampleNum)
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
+        self.resample = resample
+
+    def getSampleNumber(self):
+        return self.sqlTool.getSampleNumber()
 
     def rangeExistsOrAdd(self):
+        if self.resample:
+            return False
         rangeTable = 'range_table'
         cur = self.conn.cursor()
         cur.execute("select last_run_date, max_paper_num as pnum, last_run_successful \
@@ -159,15 +165,23 @@ class DbInterface:
         try:
             cur.execute(check_s1_cmd)
             row = cur.fetchone()
+            if self.resample:
+                while(row[0] != 0):
+                    self.sqlTool.incrementPrefix()
+                    check_s1_cmd = self.sqlTool.check_s1()
+                    s1_command = self.sqlTool.create_s1()
+                    cur.execute(check_s1_cmd)
+                    row = cur.fetchone()
+
             if row[0] == 0:
                 cur.execute(s1_command)
-                print('create s1')
+                print('create s1: %s' % self.sqlTool.get_s1_name())
+            self.conn.commit()
         except:
             print(s1_command)
             print(check_s1_cmd)
-            print(prim_key)
             raise
-        self.conn.commit()
+        
         cur.close()
 
     def pushDict(self, table, d):
@@ -214,14 +228,15 @@ def storeRequestInfo(auth_id, auth_name, pap_num, requester_name, requester_emai
     conn.close()
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20, test=False):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20, test=False, resample=False):
     sApi = ScopusApiLib()
     try:    
         author_profile = sApi.getAuthorMetrics(auth_id)
         author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
 
-        dbi = DbInterface(author_identifier, pap_num)
+        dbi = DbInterface(author_identifier, pap_num, resample=resample)
         dbi.createTables()
+        sampleNum = dbi.getSampleNumber()
 
         already = dbi.rangeExistsOrAdd()
 
@@ -258,7 +273,8 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20
             paper_counter = 1
             processes = []
             for paper_arr in grouper(1, papers):
-                processes.append(executor.submit(processPaperMain, author_identifier, paper_arr, paper_counter, pap_num, pickProb))
+                processes.append(executor.submit(processPaperMain, author_identifier, 
+                    paper_arr, paper_counter, pap_num, pickProb, sampleNum))
                 paper_counter += len(paper_arr)
 
             for p in processes:
@@ -289,7 +305,8 @@ def grouper(lengths, arr):
         arrarr.append(sub)
     return arrarr
 
-def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability):
+def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability, dbiSampleNum):
+
     sApi = ScopusApiLib()
     for eid in papers:
         print('Beginning processing for paper: ' + eid + ' of author: ' + str(author_id))
@@ -318,15 +335,15 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability)
                 print("NONE CITING PAPER")
                 continue
 
-            storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, author_id)
-            storePaperReferences(citing, dict(citePaperDict), pap_num, author_id)
+            storeCiting(dict(citePaperDict), dict(thisPaperDict), pap_num, author_id, dbiSampleNum)
+            storePaperReferences(citing, dict(citePaperDict), pap_num, author_id, dbiSampleNum)
             ccount += 1
         paper_counter += 1
         print('Done citing papers.')
 
 
-def storePaperReferences(eid, srcPaperDict, pap_num, author_id, refCount=-1):
-    dbi = DbInterface(author_id, pap_num)
+def storePaperReferences(eid, srcPaperDict, pap_num, author_id, dbiSampleNum, refCount=-1):
+    dbi = DbInterface(author_id, pap_num, resample=False, sampleNum=dbiSampleNum)
     sApi = ScopusApiLib()
     references = sApi.getPaperReferences(eid, refCount=refCount)
     if references is None:
@@ -352,9 +369,9 @@ def storePaperReferences(eid, srcPaperDict, pap_num, author_id, refCount=-1):
                 for srcAuth in srcAuthors:
                     dbi.pushToS1(srcPaperDict, fullInfoTargPaperDict, srcAuth, targAuth)
 
-def storeCiting(srcPaperDict, targPaperDict, pap_num, author_id):
-    dbi = DbInterface(author_id, pap_num)
-    sApi = ScopusApiLib()
+def storeCiting(srcPaperDict, targPaperDict, pap_num, author_id, dbiSampleNum):
+    dbi = DbInterface(author_id, pap_num,resample=False, sampleNum=dbiSampleNum)
+    # sApi = ScopusApiLib()
     srcAuthors = [{'indexed_name': None}]
     targAuthors = [{'indexed_name': None}]
     if 'authors' in srcPaperDict:
