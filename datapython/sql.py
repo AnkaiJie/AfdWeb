@@ -1,14 +1,36 @@
 class SqlCommand:
 
-    def __init__(self, author_id, paper_num):
+    def __init__(self, author_id, paper_num, sampleNumber=None):
         self.paper_num = str(paper_num)
         self.suffix = self.paper_num
+        self.original_prefix = author_id
         self.prefix = author_id
+        self.currentSampleCount=1
+
+        if sampleNumber:
+            self.currentSampleCount = sampleNumber
+            self.prefix = self.original_prefix + "_sample" + str(self.currentSampleCount)
+
+        self.s1Name = self.prefix + "_citations_s1"
+        self.s2Name = self.prefix + "_citations_s2"
+        self.overciteName = self.prefix + "_overcites"
+
+    def getSampleNumber(self):
+        if self.currentSampleCount == 1:
+            return None
+        else:
+            return self.currentSampleCount
+
+    def incrementPrefix(self):
+        self.currentSampleCount += 1
+        self.prefix = self.original_prefix + "_sample" + str(self.currentSampleCount)
+        self.s1Name = self.prefix + "_citations_s1"
+        self.s2Name = self.prefix + "_citations_s2"
+        self.overciteName = self.prefix + "_overcites"
 
     def create_s1(self):
-        tab_name = self.prefix + "_citations_s1"
         s = """
-            create table if not exists """ + tab_name + """ (
+            create table if not exists """ + self.s1Name + """ (
             src_author_dc_identifier varchar(50),
             src_author_given_name varchar(200),
             src_author_indexed_name varchar(200),
@@ -36,26 +58,21 @@ class SqlCommand:
         return s
 
     def check_s1(self):
-        tab_name = self.prefix  + "_citations_s1"
         return """select exists (select * from information_schema.tables where 
-        table_name=\"""" + tab_name + """\" and table_schema=\"CiteFraud\") """
+        table_name=\"""" + self.s1Name + """\" and table_schema=\"CiteFraud\") """
 
     def create_s1_key(self):
-        tab_name = self.prefix  + "_citations_s1"
-        return """ALTER TABLE """ + tab_name + """  
+        return """ALTER TABLE """ + self.s1Name + """  
         ADD PRIMARY KEY (`src_author_dc_identifier`, `src_paper_eid`,
         `targ_author_dc_identifier`,`targ_paper_eid`); 
         """
 
     def check_s2(self):
-        tab_name = self.prefix  + "_citations_s2"
         return """select exists (select * from information_schema.tables where 
-        table_name=\"""" + tab_name + """\" and table_schema=\"CiteFraud\") """
+        table_name=\"""" + self.s2Name + """\" and table_schema=\"CiteFraud\") """
 
     def create_s2(self):
-        tab_name = self.prefix  + "_citations_s2"
-        tab1_name = self.prefix  + "_citations_s1"
-        s = """create table """ + tab_name + """ as select
+        s = """create table """ + self.s2Name + """ as select
             substring(src_author_dc_identifier, 11) as src_author_id,
             src_author_given_name,
             src_author_indexed_name,
@@ -76,18 +93,16 @@ class SqlCommand:
             targ_paper_publicationName,
             targ_paper_title,
             cast(targ_paper_citedby_count as UNSIGNED) as targ_paper_citedby_count
-        from """ + tab1_name + """ 
+        from """ + self.s1Name + """ 
         where src_author_dc_identifier != "" and
         targ_author_dc_identifier != "";
-        ALTER TABLE """+ tab_name + """   
+        ALTER TABLE """+ self.s2Name + """   
         ADD PRIMARY KEY (`src_author_id`, `src_paper_eid`, `targ_author_id`,
         `targ_paper_eid`);"""
         return s
 
     def update_s2(self):
-        tab_name = self.prefix  + "_citations_s2"
-        tab1_name = self.prefix  + "_citations_s1"
-        s = """replace into """ + tab_name + """
+        s = """replace into """ + self.s2Name + """
             (
                 `src_author_id`,
                 `src_author_given_name`,
@@ -131,23 +146,20 @@ class SqlCommand:
             targ_paper_publicationName,
             targ_paper_title,
             cast(targ_paper_citedby_count as UNSIGNED) as targ_paper_citedby_count
-        from """ + tab1_name + """ 
+        from """ + self.s1Name + """ 
         where src_author_dc_identifier != "" and
         targ_author_dc_identifier != "";"""
         return s
 
     def get_s1_name(self):
-        return self.prefix  + "_citations_s1"
+        return self.s1Name
 
     def check_overcites(self):
-        tab_name = self.prefix + "_overcites"
         return """select exists (select * from information_schema.tables where 
-        table_name=\"""" + tab_name + """\" and table_schema=\"CiteFraud\") """
+        table_name=\"""" + self.overciteName + """\" and table_schema=\"CiteFraud\") """
 
     def update_overcites(self):
-        tab_name = self.prefix + "_overcites"
-        tab2_name = self.prefix + "_citations_s2"
-        s=  """replace into """ + tab_name + """ 
+        s=  """replace into """ + self.overciteName + """ 
             (
                 `targ_author_id`,
                 `src_paper_eid`,
@@ -159,30 +171,24 @@ class SqlCommand:
             select targ_author_id, src_paper_eid, src_paper_title, \
                 GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
                 as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
-                from """ + tab2_name + """ group by targ_author_id, \
+                from """ + self.s2Name + """ group by targ_author_id, \
                 src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
         return s
 
 
     def create_overcites(self):
-        tab_name = self.prefix + "_overcites"
-        tab2_name = self.prefix + "_citations_s2"
-
-        s = """create table """ + tab_name + """ as
+        s = """create table """ + self.overciteName + """ as
             select targ_author_id, src_paper_eid, src_paper_title, \
                 GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
                 as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
-                from """ + tab2_name + """ group by targ_author_id, \
+                from """ + self.s2Name + """ group by targ_author_id, \
                 src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
-        s += """ALTER TABLE """ + tab_name + """  
+        s += """ALTER TABLE """ + self.overciteName + """  
         ADD PRIMARY KEY (`targ_author_id`, `src_paper_eid`); 
         """
         return s
 
     def getTableNames(self):
-        tab1_name = self.prefix + "_citations_s1"
-        overname = self.prefix + "_overcites"
-        tab2_name = self.prefix + "_citations_s2"
-        return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}
+        return {'s1': self.s1Name, 's2': self.s2Name, 'overcite': self.overciteName}

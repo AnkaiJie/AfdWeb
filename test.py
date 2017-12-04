@@ -52,8 +52,8 @@ sal = ScopusApiLib()
 # print(table_names)
 # tool = Analysis(35556997000, table_names)
 
-# # Stephen Hawking
-# table_names = storeAuthorMain(6701475619, start_index=0, pap_num=20, workers=10, targetNum=150, test=False)
+# Stephen Hawking
+# table_names = storeAuthorMain(6701475619, start_index=0, pap_num=20, workers=10, targetNum=1, test=False, resample=True)
 # print(table_names)
 # tool = Analysis(6701475619, table_names)
 
@@ -63,22 +63,42 @@ sal = ScopusApiLib()
 # tool = Analysis(35570711700, table_names)
 
 
-# Athanasios Vasilakos
-table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
-print(table_names)
-tool = Analysis(22954842600, table_names)
+# # Athanasios Vasilakos
+# table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(22954842600, table_names)
 
-# Pinhan Ho
-table_names = storeAuthorMain(7402211578, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
-print(table_names)
-tool = Analysis(7402211578, table_names)
+# # Helena Karsten
+# table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False, resample=True)
+# print(table_names)
+# tool = Analysis(6603889928, table_names)
 
-# Herbert Simon
-table_names = storeAuthorMain(7402135283, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
-print(table_names)
-tool = Analysis(7402135283, table_names)
+Analysis(6603889928, {'s1': '6603889928_Helena_Karsten_sample2_citations_s1',
+    'overcite': '6603889928_Helena_Karsten_sample2_overcites',
+    's2': '6603889928_Helena_Karsten_sample2_citations_s2'})
 
-# Helena Karsten
-table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
-print(table_names)
-tool = Analysis(6603889928, table_names)
+
+# # Pascal Fua
+# table_names = storeAuthorMain(55159125200, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(55159125200, table_names)
+
+# # Anil Jain
+# table_names = storeAuthorMain(36071504600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(36071504600, table_names)
+
+# # Herbert Simon
+# table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(6603889928, table_names)
+
+# # Donald Knuth
+# table_names = storeAuthorMain(6603889928, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(6603889928, table_names)
+
+# # John Carrol
+# table_names = storeAuthorMain(7402034833, start_index=0, pap_num=20, workers=10, targetNum=200, test=False)
+# print(table_names)
+# tool = Analysis(7402034833, table_names)
