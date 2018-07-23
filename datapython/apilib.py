@@ -228,20 +228,22 @@ def storeRequestInfo(auth_id, auth_name, pap_num, requester_name, requester_emai
     conn.close()
 
 # this should be the only method that the client interacts with
-def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20, test=False, resample=False):
+def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20, test=False, resample=False, sampleNum=None):
     sApi = ScopusApiLib()
     try:    
         author_profile = sApi.getAuthorMetrics(auth_id)
         author_identifier = author_profile['dc:identifier'] + '_' + author_profile['given-name'] + '_' + author_profile['surname']
 
-        dbi = DbInterface(author_identifier, pap_num, resample=resample)
+        dbi = DbInterface(author_identifier, pap_num, resample=resample, sampleNum=sampleNum)
         dbi.createTables()
         sampleNum = dbi.getSampleNumber()
 
         already = dbi.rangeExistsOrAdd()
 
         if (already and not test):
-            print("Range exists, skipping s1/s2")
+            print("Range exists, skipping s1")
+            print('Beginning processing of s2 table.')
+            dbi.processS2()
         else:
             print("Range doesn't exist or there was previous failure. Beginning.")
             # Puts the main author record

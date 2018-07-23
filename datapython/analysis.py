@@ -12,7 +12,7 @@ plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid, table_names, custom_name=None):
+    def __init__(self, authid, table_names, custom_name=None, show_barcounts=True):
         self.api = ScopusApiLib()
 
         if custom_name is None:
@@ -27,7 +27,7 @@ class Analysis:
         self.influenceIndex = str(self.indices[0])
         self.fraudIndex = str(self.indices[1])
 
-        stackedName = self.plotOverCitesStacked()
+        stackedName = self.plotOverCitesStacked(show_barcounts=show_barcounts)
         scatterName = self.plotOvercitesScatter()
         csvName = self.overcitesCsv()
 
@@ -69,7 +69,7 @@ class Analysis:
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
         iCmd = "select round(avg(overcites*src_paper_citedby_count), 1) from " + self.table_names['overcite']
-
+        print(iCmd)
         curs.execute(iCmd)
         rows = curs.fetchone()
         influenceIndex = rows[0]
@@ -123,10 +123,9 @@ class Analysis:
         else:
             plt.show()
 
-
         return savename
 
-    def plotOverCitesStacked(self, save=True):
+    def plotOverCitesStacked(self, save=True, show_barcounts=True):
         df = self.getOvercites()
         fig, ax = plt.subplots(figsize=(10,10))
         fig.subplots_adjust(bottom=0.25)
@@ -192,6 +191,8 @@ class Analysis:
                 left[r] += w
                 row_counts[r] += 1
                 continue
+
+            
             patch_handles.append(ax.barh(r, w, align='center', left=left[r],
                 color=colors[int(row_counts[r]) % len(colors)]))
             left[r] += w
@@ -201,7 +202,8 @@ class Analysis:
             bl = patch.get_xy()
             x = 0.5*patch.get_width() + bl[0]
             y = 0.5*patch.get_height() + bl[1]
-            ax.text(x, y, "%d" % (l), ha='center',va='center')
+            if show_barcounts:
+                ax.text(x, y, "%d" % (l), ha='center',va='center')
 
         ax.set_yticks(np.arange(0, max(numRows, 5), 1))
         ax.set_yticklabels(range(max(numRows,10)))
