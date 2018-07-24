@@ -69,7 +69,6 @@ class Analysis:
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
         iCmd = "select round(avg(overcites*src_paper_citedby_count), 1) from " + self.table_names['overcite']
-        print(iCmd)
         curs.execute(iCmd)
         rows = curs.fetchone()
         influenceIndex = rows[0]

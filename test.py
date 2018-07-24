@@ -22,7 +22,7 @@ sal = ScopusApiLib()
 # k = sal.getPaperInfo('2-s2.0-85017420948')
 # print (k)
 
-# ref = sal.getPaperReferences('2-s2.0-26444447080')
+# ref = sal.getPaperReferences('2-s2.0-84877367951')
 
 # print(sal.prettifyJson(ref))
 
@@ -59,15 +59,15 @@ sal = ScopusApiLib()
 # print(table_names)
 # tool = Analysis(35570711700, table_names)
 
-def getTableNames(aid, name, sample=None):
-    aid = str(aid)
-    prefix = aid +'_' + '_'.join(name.split())
-    if sample and sample is not 1:
-        prefix += "_sample" + str(sample)
-    tab1_name = prefix + "_citations_s1"
-    overname = prefix + "_overcites"
-    tab2_name = prefix + "_citations_s2"
-    return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}
+# def getTableNames(aid, name, sample=None):
+#     aid = str(aid)
+#     prefix = aid +'_' + '_'.join(name.split())
+#     if sample and sample is not 1:
+#         prefix += "_sample" + str(sample)
+#     tab1_name = prefix + "_citations_s1"
+#     overname = prefix + "_overcites"
+#     tab2_name = prefix + "_citations_s2"
+#     return {'s1': tab1_name, 's2': tab2_name, 'overcite': overname}
 
 # Athanasios Vasilakos
 # table_names = storeAuthorMain(22954842600, start_index=0, pap_num=20, workers=10, targetNum=200, test=False, resample=True)
@@ -150,15 +150,19 @@ def getTableNames(aid, name, sample=None):
 
 
 
-# 6701629145_Andrea_Schaerf_overcites
-table_names = getTableNames(6701629145, 'Andrea Schaerf', sample=1)
+# # 6701629145_Andrea_Schaerf_overcites
+# table_names = getTableNames(6701629145, 'Andrea Schaerf', sample=1)
+# print(table_names)
+# tool = Analysis(6701629145, table_names, custom_name='Author C', show_barcounts=False)
+
+# #10141917500_Srinivasan_Keshav_overcites
+# table_names = getTableNames(10141917500, 'Srinivasan Keshav', sample=1)
+# print(table_names)
+# tool = Analysis(10141917500, table_names, custom_name='Author D', show_barcounts=False)
+
+
+
+# Varde Keshav
+table_names = storeAuthorMain(7004024654, start_index=0, pap_num=20, workers=10, targetNum=200, test=False, resample=False, sampleNum=None)
 print(table_names)
-tool = Analysis(6701629145, table_names, custom_name='Author C', show_barcounts=False)
-
-#10141917500_Srinivasan_Keshav_overcites
-table_names = getTableNames(10141917500, 'Srinivasan Keshav', sample=1)
-print(table_names)
-tool = Analysis(10141917500, table_names, custom_name='Author D', show_barcounts=False)
-
-
-
+tool = Analysis(7004024654, table_names)
