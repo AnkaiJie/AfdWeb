@@ -231,8 +231,11 @@ class ScopusApiLib:
             else:
                 resp_body = resp_body['references']['reference']
             current_refs = []
-            for idx, raw in enumerate(resp_body):
 
+            # Only one reference returned: it doesn't get returned as a list, so we must put it in one
+            if type(resp_body) is dict:
+                resp_body = [resp_body]
+            for idx, raw in enumerate(resp_body):
                 ref_dict = {}
                 ref_dict['authors'] = None
                 if raw['author-list'] and raw['author-list']['author']:

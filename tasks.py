@@ -68,8 +68,6 @@ def analyze(author_id, name, email, table_names, author_name):
     tool = Analysis(author_id, table_names)
     to_zip = tool.getChartNames()
 
-    to_zip += ['datapython/graphs/README.pdf']
-
     name_process = author_name.split()[0].lower().replace('.','').replace(',','').strip()
     zipath = 'datapython/graphs/' + author_id + '_' + name_process +  '_influencedata.zip'
     with ZipFile(zipath, 'w') as myzip:
@@ -89,7 +87,7 @@ def fix_multiprocessing(**kwargs):
 @capp.task
 def run_overcite_script(author_id, pnum, name, email, author_name):
 
-    table_names = storeAuthorMain(author_id, start_index=0, pap_num=20, 
+    table_names = storeAuthorMain(author_id, start_index=0, pap_num=pnum,
         workers=10, targetNum=200, test=False)
     print(table_names)
 
