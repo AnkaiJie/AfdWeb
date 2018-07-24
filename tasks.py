@@ -75,7 +75,7 @@ def analyze(author_id, name, email, table_names, author_name):
             filename = path.split('/')[-1]
             myzip.write(path, filename)
 
-    #send_email_success(author_id, name, email, zipath, author_name)
+    send_email_success(author_id, name, email, zipath, author_name)
 
 
 @worker_process_init.connect
@@ -87,7 +87,7 @@ def fix_multiprocessing(**kwargs):
 @capp.task
 def run_overcite_script(author_id, pnum, name, email, author_name):
 
-    table_names = storeAuthorMain(author_id, start_index=0, pap_num=pnum, 
+    table_names = storeAuthorMain(author_id, start_index=0, pap_num=pnum,
         workers=10, targetNum=200, test=False)
     print(table_names)
 
