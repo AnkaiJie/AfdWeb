@@ -15,6 +15,9 @@ class DbInterface:
         self.utility = Utility()
         self.scops = ScopusApiLib()
         self.author_id = author_id
+        self.author_id_sample = author_id
+        if sampleNum is not None:
+            self.author_id_sample += '_sample' + str(sampleNum)
         self.sqlTool = SqlCommand(author_id, paper_num, sampleNum)
         self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         self.resample = resample
@@ -28,7 +31,7 @@ class DbInterface:
         rangeTable = 'range_table'
         cur = self.conn.cursor()
         cur.execute("select last_run_date, max_paper_num as pnum, last_run_successful \
-            from %s where author_id='%s'" % (rangeTable, self.author_id))
+            from %s where author_id='%s'" % (rangeTable, self.author_id_sample))
         row = cur.fetchone()
         today = datetime.datetime.now()
         if row:
@@ -44,7 +47,7 @@ class DbInterface:
             if rangeExists(last_run_successful, pnum, date_diff.days):
                 return True
 
-        toAdd = "('" + str(self.author_id) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + \
+        toAdd = "('" + str(self.author_id_sample) + "', '" + today.strftime('%Y-%m-%d %H:%M:%S') + "', " + \
             str(self.paper_num) + ", 0)"
         query = "insert into %s (author_id, last_run_date, max_paper_num, \
             last_run_successful) values %s on duplicate key update author_id=values(author_id), \
@@ -60,14 +63,14 @@ class DbInterface:
         print(err_msg)
         cur = self.conn.cursor()
         query = "update %s set last_run_successful=0, \
-            last_error_msg='%s' where author_id='%s'" % (rangeTable, err_msg, self.author_id)
+            last_error_msg='%s' where author_id='%s'" % (rangeTable, err_msg, self.author_id_sample)
         cur.execute(query)
         self.conn.commit()
 
     def rangeUpdateSuccess(self):
         rangeTable = 'range_table'
         cur = self.conn.cursor()
-        query = "update %s set last_run_successful=1 where author_id='%s'" % (rangeTable, self.author_id)
+        query = "update %s set last_run_successful=1 where author_id='%s'" % (rangeTable, self.author_id_sample)
         cur.execute(query)
         self.conn.commit()
 
@@ -94,6 +97,7 @@ class DbInterface:
 
     def processOvercites(self):
         overcite_command = self.sqlTool.create_overcites()
+        overcite_key_command = self.sqlTool.create_overcites_key()
         check_overcites_cmd = self.sqlTool.check_overcites()
         update_overcites_cmd = self.sqlTool.update_overcites()
         cur = self.conn.cursor()
@@ -102,6 +106,7 @@ class DbInterface:
             row = cur.fetchone()
             if row[0] == 0:
                 cur.execute(overcite_command)
+                cur.execute(overcite_key_command)
                 print('create overcites')
             else:
                 cur.execute(update_overcites_cmd)
@@ -117,6 +122,7 @@ class DbInterface:
 
     def processS2(self):
         s2_command = self.sqlTool.create_s2()
+        s2_key_command = self.sqlTool.create_s2_key()
         check_s2_cmd = self.sqlTool.check_s2()
         update_s2_cmd = self.sqlTool.update_s2()
         cur = self.conn.cursor()
@@ -125,6 +131,7 @@ class DbInterface:
             row = cur.fetchone()
             if row[0] == 0:
                 cur.execute(s2_command)
+                cur.execute(s2_key_command)
                 print('create s2')
             else:
                 cur.execute(update_s2_cmd)
@@ -160,6 +167,7 @@ class DbInterface:
 
     def createTables(self):
         s1_command = self.sqlTool.create_s1()
+        s1_key_command = self.sqlTool.create_s1_key()
         check_s1_cmd = self.sqlTool.check_s1()
         cur = self.conn.cursor()
         try:
@@ -175,6 +183,7 @@ class DbInterface:
 
             if row[0] == 0:
                 cur.execute(s1_command)
+                cur.execute(s1_key_command)
                 print('create s1: %s' % self.sqlTool.get_s1_name())
             self.conn.commit()
         except:
@@ -254,6 +263,8 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20
             papers = sApi.getAuthorPapers(auth_id, start=start_index, num=pap_num)
 
             def generatePickProbability(ps, goal):
+                if goal is None:
+                    return 1
                 totalCbc = 0
                 for paper in ps:
                     # print(paper)

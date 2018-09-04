@@ -5,9 +5,9 @@ class SqlCommand:
         self.suffix = self.paper_num
         self.original_prefix = author_id
         self.prefix = author_id
-        self.currentSampleCount=1
+        self.currentSampleCount=None
 
-        if sampleNumber:
+        if sampleNumber is not None:
             self.currentSampleCount = sampleNumber
             self.prefix = self.original_prefix + "_sample" + str(self.currentSampleCount)
 
@@ -16,10 +16,7 @@ class SqlCommand:
         self.overciteName = self.prefix + "_overcites"
 
     def getSampleNumber(self):
-        if self.currentSampleCount == 1:
-            return None
-        else:
-            return self.currentSampleCount
+        return self.currentSampleCount
 
     def incrementPrefix(self):
         self.currentSampleCount += 1
@@ -53,7 +50,7 @@ class SqlCommand:
             targ_paper_citedby_count varchar(50)
         ) charset=utf8mb4;
         """
-        s += self.create_s1_key();
+        # s += self.create_s1_key()
 
         return s
 
@@ -62,7 +59,7 @@ class SqlCommand:
         table_name=\"""" + self.s1Name + """\" and table_schema=\"CiteFraud\") """
 
     def create_s1_key(self):
-        return """ALTER TABLE """ + self.s1Name + """  
+        return """ALTER TABLE `""" + self.s1Name + """`  
         ADD PRIMARY KEY (`src_author_dc_identifier`, `src_paper_eid`,
         `targ_author_dc_identifier`,`targ_paper_eid`); 
         """
@@ -95,11 +92,14 @@ class SqlCommand:
             cast(targ_paper_citedby_count as UNSIGNED) as targ_paper_citedby_count
         from """ + self.s1Name + """ 
         where src_author_dc_identifier != "" and
-        targ_author_dc_identifier != "";
-        ALTER TABLE """+ self.s2Name + """   
+        targ_author_dc_identifier != "";"""
+
+        return s
+
+    def create_s2_key(self):
+        return """ ALTER TABLE `"""+ self.s2Name + """`   
         ADD PRIMARY KEY (`src_author_id`, `src_paper_eid`, `targ_author_id`,
         `targ_paper_eid`);"""
-        return s
 
     def update_s2(self):
         s = """replace into """ + self.s2Name + """
@@ -171,8 +171,8 @@ class SqlCommand:
             select targ_author_id, src_paper_eid, src_paper_title, \
                 GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
                 as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
-                from """ + self.s2Name + """ group by targ_author_id, \
-                src_paper_eid, src_paper_title, src_paper_citedby_count;
+                from """ + self.s2Name + """ where targ_author_id != src_author_id \
+                group by targ_author_id, src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
         return s
 
@@ -182,13 +182,15 @@ class SqlCommand:
             select targ_author_id, src_paper_eid, src_paper_title, \
                 GROUP_CONCAT(distinct CONCAT(src_author_given_name, ' ', src_author_surname) SEPARATOR ', ') \
                 as src_paper_authors, src_paper_citedby_count, count(distinct targ_paper_eid) as overcites \
-                from """ + self.s2Name + """ group by targ_author_id, \
-                src_paper_eid, src_paper_title, src_paper_citedby_count;
+                from """ + self.s2Name + """ where targ_author_id != src_author_id \
+                group by targ_author_id, src_paper_eid, src_paper_title, src_paper_citedby_count;
             """
-        s += """ALTER TABLE """ + self.overciteName + """  
+        return s
+
+    def create_overcites_key(self):
+        return """ALTER TABLE `""" + self.overciteName + """`  
         ADD PRIMARY KEY (`targ_author_id`, `src_paper_eid`); 
         """
-        return s
 
     def getTableNames(self):
         return {'s1': self.s1Name, 's2': self.s2Name, 'overcite': self.overciteName}

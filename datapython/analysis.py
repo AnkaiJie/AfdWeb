@@ -30,11 +30,11 @@ class Analysis:
         self.fraudIndex = str(self.indices[1])
 
         stackedName = self.plotOverCitesStacked(show_barcounts=show_barcounts)
-        scatterName = self.plotOvercitesScatter()
-        csvName = self.overcitesCsv()
+        # scatterName = self.plotOvercitesScatter()
+        # csvName = self.overcitesCsv()
 
 
-        self.visualNames = [stackedName, scatterName, csvName]
+        # self.visualNames = [stackedName, scatterName, csvName]
 
     def getChartNames(self):
         return self.visualNames
@@ -61,7 +61,6 @@ class Analysis:
             2:'Citing Paper Title', 3:'Citing Paper Authors', 4:'Citing Paper Cited By Count', \
             5:'Citations to Target Author'}, inplace=True)
         df = df.fillna(0)
-
         curs.close()
         conn.close()
 
