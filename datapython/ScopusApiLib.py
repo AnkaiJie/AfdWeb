@@ -135,7 +135,7 @@ class ScopusApiLib:
         if reference:
             url = url = 'https://api.elsevier.com/content/abstract/eid/' + str(eid)
         resp = self.reqs.getJson(url)
-        # print(self.prettifyJsonif(resp))
+
         try:
             if 'service-error' in resp:
                 resp = self.reqs.getJson(url)

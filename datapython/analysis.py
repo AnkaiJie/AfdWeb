@@ -9,32 +9,37 @@ import numpy as np
 import math
 from datapython.apilib import ScopusApiLib
 import csv
+import os
 
 plt.style.use('ggplot')
 
 class Analysis:
 
-    def __init__(self, authid, table_names, custom_name=None, show_barcounts=True):
+    def __init__(self, authid, table_names, custom_name=None, version=2, show_barcounts=True):
         self.api = ScopusApiLib()
 
         if custom_name is None:
             self.authname = self.getAuthorName(authid)
         else:
             self.authname = custom_name
-        # self.authname = 'Athanasios Vasilakos'
+
         self.authid = str(authid)
         self.table_names = table_names
 
-        self.indices = self.getIndices()
+        self.indices = self.getIndices(version=version)
         self.influenceIndex = str(self.indices[0])
         self.fraudIndex = str(self.indices[1])
 
         stackedName = self.plotOverCitesStacked(show_barcounts=show_barcounts)
         # scatterName = self.plotOvercitesScatter()
-        # csvName = self.overcitesCsv()
+        csvName = self.overcitesCsv()
 
 
         # self.visualNames = [stackedName, scatterName, csvName]
+
+    def createDirectory(self, path):
+        if not os.path.exists(path):
+            os.mkdir(path)
 
     def getChartNames(self):
         return self.visualNames
@@ -66,10 +71,24 @@ class Analysis:
 
         return df
 
-    def getIndices(self):
+    def getIndices(self, version=2):
         conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
         curs = conn.cursor()
         iCmd = "select round(avg(overcites*src_paper_citedby_count), 1) from " + self.table_names['overcite']
+        if version == 2:
+            iCmd = """
+                select round(avg(overcites.overcites*overcites.src_paper_citedby_count/cite_counts.citation_count), 2)
+                    from `%s` as overcites , paper_citation_counts as cite_counts
+                    where overcites.src_paper_eid = cite_counts.paper_eid
+            """ % self.table_names['overcite']
+
+        if version == 3:
+            """
+            select round(avg(overcites.overcites*overcites.src_paper_citedby_count), 1)
+                from `%s` as overcites , paper_citation_counts as cite_counts
+                where overcites.src_paper_eid = cite_counts.paper_eid and cite_counts.citation_count < 100 
+            """ % self.table_names['overcite']
+            
         curs.execute(iCmd)
         rows = curs.fetchone()
         influenceIndex = rows[0]
@@ -116,8 +135,10 @@ class Analysis:
         # heatmap, xedges, yedges = np.histogram2d(citedbys, citations, bins=50)
 
         ax.scatter(citedbys, citations, c='r')
-
-        savename = 'datapython/graphs/Scatter_' + '_'.join(authname.split()) + '.png'
+        
+        savepath = 'datapython/graphs/' + self.authid
+        self.createDirectory(savepath)
+        savename = savepath + '/' + 'Scatter_' + '_'.join(authname.split()) + '.png'
         if save:
             fig.savefig(savename)
         else:
@@ -225,8 +246,10 @@ class Analysis:
             handles=[cyan_patch, green_patch, yellow_patch, red_patch, mag_patch])
         legend.get_frame().set_facecolor('#ffffff')
 
+        savepath = 'datapython/graphs/' + self.authid
+        self.createDirectory(savepath)
+        savename = savepath + '/' + 'StackedBar_' + '_'.join(authname.split()) + '.png'
 
-        savename = 'datapython/graphs/StackedBar_' + '_'.join(authname.split()) + '.png'
         if save:
             fig.savefig(savename)
         else:
@@ -237,8 +260,8 @@ class Analysis:
 
     def overcitesCsv(self):
         df = self.getOvercites()
-        name = 'datapython/graphs/Influence_' + '_'.join(self.authname.split()) + '.csv'
-        writer = csv.writer(open(name, 'w'), lineterminator='\n')
+        name = 'datapython/graphs/' + self.authid + '/' + 'Influence_' + '_'.join(self.authname.split()) + '.csv'
+        writer = csv.writer(open(name, 'w+'), lineterminator='\n')
 
         writer.writerow(['Target Author Id: '  + self.authid])
         writer.writerow(['Target Author Name: ' + self.authname])

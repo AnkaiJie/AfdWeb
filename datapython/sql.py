@@ -5,25 +5,26 @@ class SqlCommand:
         self.suffix = self.paper_num
         self.original_prefix = author_id
         self.prefix = author_id
-        self.currentSampleCount=None
+        self.sampleNumber = sampleNumber
 
         if sampleNumber is not None:
-            self.currentSampleCount = sampleNumber
-            self.prefix = self.original_prefix + "_sample" + str(self.currentSampleCount)
+            self.prefix = self.original_prefix + "_sample" + str(self.sampleNumber)
 
         self.s1Name = self.prefix + "_citations_s1"
         self.s2Name = self.prefix + "_citations_s2"
         self.overciteName = self.prefix + "_overcites"
 
     def getSampleNumber(self):
-        return self.currentSampleCount
+        return self.sampleNumber
 
-    def incrementPrefix(self):
-        self.currentSampleCount += 1
-        self.prefix = self.original_prefix + "_sample" + str(self.currentSampleCount)
-        self.s1Name = self.prefix + "_citations_s1"
-        self.s2Name = self.prefix + "_citations_s2"
-        self.overciteName = self.prefix + "_overcites"
+
+    def drop_all(self):
+        s = [
+            'drop table if exists `' + self.s1Name + '`;',
+            'drop table if exists `' + self.s2Name + '`;',
+            'drop table if exists `' + self.overciteName + '`;'
+        ]
+        return s
 
     def create_s1(self):
         s = """

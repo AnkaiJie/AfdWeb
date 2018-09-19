@@ -8,7 +8,20 @@ import traceback
 from datapython.utility import Utility
 import random
 
-# all the SQL code to insert/update is here
+# For inserting into independent and isolated tables. 
+class IndependentDbInterface:
+    def __init__(self):
+        self.conn = pymysql.connect(HOST, USER, PASSWORD, DBNAME, charset='utf8')
+
+    def insertNumReferences(self, eid, numReferences):
+        tableName = 'paper_citation_counts'
+        query = "replace into `%s` (paper_eid, citation_count) values ('%s', %d);" % (tableName, eid, numReferences)
+        cur = self.conn.cursor()
+        cur.execute(query)
+        self.conn.commit()
+        cur.close()
+
+# all the SQL code to insert/update for a given author, papernum
 class DbInterface:
     def __init__(self, author_id, paper_num, resample=False, sampleNum=None):
         self.paper_num = paper_num
@@ -26,8 +39,6 @@ class DbInterface:
         return self.sqlTool.getSampleNumber()
 
     def rangeExistsOrAdd(self):
-        if self.resample:
-            return False
         rangeTable = 'range_table'
         cur = self.conn.cursor()
         cur.execute("select last_run_date, max_paper_num as pnum, last_run_successful \
@@ -76,7 +87,6 @@ class DbInterface:
 
 
     def pushToS1(self, srcPaperDict, targPaperDict, srcAuthor, targAuthor):
-
         s1_table = self.sqlTool.get_s1_name()
 
         srcPaperDict = self.utility.addPrefixToKeys(srcPaperDict, 'src_paper_')
@@ -171,15 +181,12 @@ class DbInterface:
         check_s1_cmd = self.sqlTool.check_s1()
         cur = self.conn.cursor()
         try:
+            if self.resample:
+                print('Resample toggled. Dropping existing tables.')
+                for drop in self.sqlTool.drop_all():
+                    cur.execute(drop)
             cur.execute(check_s1_cmd)
             row = cur.fetchone()
-            if self.resample:
-                while(row[0] != 0):
-                    self.sqlTool.incrementPrefix()
-                    check_s1_cmd = self.sqlTool.check_s1()
-                    s1_command = self.sqlTool.create_s1()
-                    cur.execute(check_s1_cmd)
-                    row = cur.fetchone()
 
             if row[0] == 0:
                 cur.execute(s1_command)
@@ -248,13 +255,15 @@ def storeAuthorMain(auth_id, start_index=0, pap_num=20, workers=10, targetNum=20
         sampleNum = dbi.getSampleNumber()
 
         already = dbi.rangeExistsOrAdd()
+        if resample:
+            already = False
 
         if (already and not test):
             print("Range exists, skipping s1")
             print('Beginning processing of s2 table.')
             dbi.processS2()
         else:
-            print("Range doesn't exist or there was previous failure. Beginning.")
+            print("Range doesn't exist or there was previous failure or resample. Beginning.")
             # Puts the main author record
             print('Beginning processing of S1 table for : ' + str(auth_id))
             
@@ -327,7 +336,7 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability,
         citedbys = sApi.getAllCitingPapers(eid, sort_order="citations_upper")
 
         thisPaperDict = sApi.getPaperInfo(eid) #do this here to avoid duplicate api calls
-
+        
         if thisPaperDict is None:
             print("NONE MAIN PAPER")
             continue
@@ -336,11 +345,12 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability,
 
         ccount = 1
         for citeIdx, citing in enumerate(citedbys):
-
             # apply our probabilistic pick rate
             rando = random.random()
             if rando > pickProbability:
                 continue
+
+            storePaperNumReferences(citing)
 
             print('Paper %d. Citing Paper %d. EIDs: %s, %s' % (paper_counter, citeIdx, eid, citing))
             citePaperDict = sApi.getPaperInfo(citing)
@@ -354,6 +364,12 @@ def processPaperMain(author_id, papers, paper_counter, pap_num, pickProbability,
         paper_counter += 1
         print('Done citing papers.')
 
+def storePaperNumReferences(eid):
+    sApi = ScopusApiLib()
+    thisPaperReferences = sApi.getPaperInfo(eid, reference=True)
+    numReferences = int(thisPaperReferences['@refcount'])
+    dbi = IndependentDbInterface()
+    dbi.insertNumReferences(eid, numReferences)
 
 def storePaperReferences(eid, srcPaperDict, pap_num, author_id, dbiSampleNum, refCount=-1):
     dbi = DbInterface(author_id, pap_num, resample=False, sampleNum=dbiSampleNum)
@@ -383,7 +399,7 @@ def storePaperReferences(eid, srcPaperDict, pap_num, author_id, dbiSampleNum, re
                     dbi.pushToS1(srcPaperDict, fullInfoTargPaperDict, srcAuth, targAuth)
 
 def storeCiting(srcPaperDict, targPaperDict, pap_num, author_id, dbiSampleNum):
-    dbi = DbInterface(author_id, pap_num,resample=False, sampleNum=dbiSampleNum)
+    dbi = DbInterface(author_id, pap_num, resample=False, sampleNum=dbiSampleNum)
     # sApi = ScopusApiLib()
     srcAuthors = [{'indexed_name': None}]
     targAuthors = [{'indexed_name': None}]

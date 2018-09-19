@@ -6,7 +6,7 @@ from datapython.analysis import Analysis
 # # dbi = DbInterface('ankaijie', 'citations_lower', 1,1)
 # # print(dbi.rangeExistsOrAdd())
 
-#sal = ScopusApiLib()
+sal = ScopusApiLib()
 #k = sal.getAuthorMetrics(22954842600)
 #print(sal.prettifyJson(k))
 # k= sal.getAuthorPapers("AUTHOR_ID:22954842600", 0, 2)
@@ -19,12 +19,14 @@ from datapython.analysis import Analysis
 # print(sal.prettifyJson(k))
 # print(len(k))
 
-# k = sal.getPaperInfo('2-s2.0-85017420948')
-# print (k)
+k = sal.getPaperInfo('2-s2.0-85017420948', reference=True)
+print (k)
+print(k['@refcount'])
+
 
 # ref = sal.getPaperReferences('2-s2.0-84877367951')
 
-# print(sal.prettifyJson(ref))
+# print(sal.prettifyJson(k))
 
 
 
@@ -112,41 +114,41 @@ from datapython.analysis import Analysis
 # tool = Analysis(6701475619, table_names, custom_name='Stephen Hawking')
 
 
-for i in range(1,6, 1):
-    # Athanasios Vasilakos
-    table_names = getTableNames(22954842600, "Athanasios Vasilakos", sample=i)
-    print(table_names)
-    tool = Analysis(22954842600, table_names, custom_name='Author E Sample ' + str(i))
+# for i in range(1,6, 1):
+#     # Athanasios Vasilakos
+#     table_names = getTableNames(22954842600, "Athanasios Vasilakos", sample=i)
+#     print(table_names)
+#     tool = Analysis(22954842600, table_names, custom_name='Author E Sample ' + str(i))
 
-    # Herbert Simon
-    table_names = getTableNames(7402135283, 'Herbert Simon', sample=i)
-    print(table_names)
-    tool = Analysis(7402135283, table_names, custom_name='Author A Sample ' + str(i))
+#     # Herbert Simon
+#     table_names = getTableNames(7402135283, 'Herbert Simon', sample=i)
+#     print(table_names)
+#     tool = Analysis(7402135283, table_names, custom_name='Author A Sample ' + str(i))
 
-    # # Helena Karsten
-    # table_names = getTableNames(6603889928, 'Helena Karsten', sample=i)
-    # print(table_names)
-    # tool = Analysis(6603889928, table_names, custom_name='Author C Sample ' + str(i))
+#     # # Helena Karsten
+#     # table_names = getTableNames(6603889928, 'Helena Karsten', sample=i)
+#     # print(table_names)
+#     # tool = Analysis(6603889928, table_names, custom_name='Author C Sample ' + str(i))
 
-    # Anil Jain
-    table_names = getTableNames(36071504600, 'Anil Jain', sample=i)
-    print(table_names)
-    tool = Analysis(36071504600, table_names, custom_name='Author B Sample ' + str(i))
+#     # Anil Jain
+#     table_names = getTableNames(36071504600, 'Anil Jain', sample=i)
+#     print(table_names)
+#     tool = Analysis(36071504600, table_names, custom_name='Author B Sample ' + str(i))
 
-    # # Pascal Fua
-    # table_names = getTableNames(55159125200, 'Pascal Fua', sample=i)
-    # print(table_names)
-    # tool = Analysis(55159125200, table_names, custom_name='Author E Sample ' + str(i))
+#     # # Pascal Fua
+#     # table_names = getTableNames(55159125200, 'Pascal Fua', sample=i)
+#     # print(table_names)
+#     # tool = Analysis(55159125200, table_names, custom_name='Author E Sample ' + str(i))
 
-    # # Donald Knuth
-    # table_names = getTableNames(7004138948, 'Donald Knuth', sample=i)
-    # print(table_names)
-    # tool = Analysis(7004138948, table_names, custom_name='Author D Sample ' + str(i))
+#     # # Donald Knuth
+#     # table_names = getTableNames(7004138948, 'Donald Knuth', sample=i)
+#     # print(table_names)
+#     # tool = Analysis(7004138948, table_names, custom_name='Author D Sample ' + str(i))
 
-    # Jiafu Wan
-    table_names = getTableNames(24333732700, 'Jiafu Wan', sample=i)
-    print(table_names)
-    tool = Analysis(24333732700, table_names, custom_name='Author F Sample ' + str(i))
+#     # Jiafu Wan
+#     table_names = getTableNames(24333732700, 'Jiafu Wan', sample=i)
+#     print(table_names)
+#     tool = Analysis(24333732700, table_names, custom_name='Author F Sample ' + str(i))
 
 
 
